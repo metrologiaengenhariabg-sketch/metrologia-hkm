@@ -22,11 +22,9 @@ export default function Login({ onLogin }) {
   return (
     <div className={s.bg}>
       <div className={s.card}>
-        <div className={s.logo}>
-          <i className="ti ti-ruler-measure" />
-        </div>
+        <img src="/BG_LOGO__1__sem_o_fundo.png" alt="BG Metrologia" style={{height:70,width:'auto',marginBottom:16}} />
         <h1 className={s.title}>MetroControl</h1>
-        <p className={s.sub}>BG Engenharia · Sistema de Metrologia</p>
+        <p className={s.sub}>BG Metrologia & Engenharia · Sistema de Gestão</p>
 
         <form onSubmit={handleLogin} className={s.form}>
           <div className={s.frow}>
