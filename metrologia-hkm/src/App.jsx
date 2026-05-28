@@ -84,9 +84,7 @@ export default function App() {
     <div className={styles.shell}>
       <header className={styles.topbar}>
         <div className={styles.tl}>
-          <div className={styles.logo}><i className="ti ti-ruler-measure" /></div>
-          <span className={styles.appname}>MetroControl</span>
-          <span className={styles.apptag}>BG Engenharia</span>
+          <img src="/BG_LOGO__1__sem_o_fundo.png" alt="BG Metrologia" style={{height:36,width:'auto'}} />
         </div>
         <div className={styles.tr}>
           <button className={styles.tbtn} onClick={openNew}><i className="ti ti-plus" /> Novo</button>
@@ -137,4 +135,3 @@ export default function App() {
     </div>
   )
 }
-
