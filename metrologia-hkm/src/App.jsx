@@ -6,6 +6,7 @@ import Calibracoes from './pages/Calibracoes.jsx'
 import Relatorio   from './pages/Relatorio.jsx'
 import ITCQ        from './pages/ITCQ.jsx'
 import Login       from './pages/Login.jsx'
+import Criterios   from './pages/Criterios.jsx'
 import ModalInstrumento from './components/ModalInstrumento.jsx'
 import styles from './App.module.css'
 
@@ -14,7 +15,8 @@ const NAV = [
   { id: 'inventario',  label: 'Inventário',   icon: 'ti-ruler-2', badge: true },
   { id: 'calibracoes', label: 'Calibrações',  icon: 'ti-calendar-check' },
   { id: 'relatorio',   label: 'Visão geral',  icon: 'ti-chart-bar', section: 'Relatórios' },
-  { id: 'itcq',        label: 'IT-CQ-008',    icon: 'ti-file-description', section: 'Referência' },
+  { id: 'criterios',   label: 'Critérios',     icon: 'ti-list-check',       section: 'Referência' },
+  { id: 'itcq',        label: 'IT-CQ-008',    icon: 'ti-file-description' },
 ]
 
 export default function App() {
@@ -122,6 +124,7 @@ export default function App() {
         {page === 'inventario'  && <Inventario  {...pageProps} />}
         {page === 'calibracoes' && <Calibracoes {...pageProps} />}
         {page === 'relatorio'   && <Relatorio   {...pageProps} />}
+        {page === 'criterios'   && <Criterios />}
         {page === 'itcq'        && <ITCQ />}
       </main>
 
