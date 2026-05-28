@@ -84,7 +84,7 @@ export default function App() {
     <div className={styles.shell}>
       <header className={styles.topbar}>
         <div className={styles.tl}>
-          <img src="/BG_LOGO__1__sem_o_fundo.png" alt="BG Metrologia" style={{height:36,width:'auto'}} />
+          <img src="/bg_Logo.jpeg" alt="BG Metrologia" style={{height:38,width:'auto',maxWidth:160,objectFit:'contain',borderRadius:4}} />
         </div>
         <div className={styles.tr}>
           <button className={styles.tbtn} onClick={openNew}><i className="ti ti-plus" /> Novo</button>
