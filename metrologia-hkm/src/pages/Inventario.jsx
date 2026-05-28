@@ -88,7 +88,7 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
                   {slice.map(i => (
                     <tr key={i.id}>
                       <td className={s.mono} style={{fontWeight:500}}>{i.tag}</td>
-                      <td title={i.descricao} style={{maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{i.descricao}</td>
+                      <td title={i.descricao} style={{maxWidth:130,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{i.descricao}</td>
                       <td className={s.muted}>{i.tipo||'—'}</td>
                       <td className={s.muted} style={{maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[i.fabricante,i.modelo].filter(Boolean).join(' ')||'—'}</td>
                       <td style={{color:'var(--blue)',fontSize:10}}>{i.criterio||'—'}</td>
@@ -124,4 +124,5 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
   )
 }
 // style patch applied
+
 
