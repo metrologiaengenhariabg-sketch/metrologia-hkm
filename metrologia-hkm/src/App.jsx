@@ -63,7 +63,7 @@ export default function App() {
         <div className={styles.tl}>
           <div className={styles.logo}><i className="ti ti-ruler-measure" /></div>
           <span className={styles.appname}>MetroControl</span>
-          <span className={styles.apptag}>HKM Indústria e Comércio</span>
+          <span className={styles.apptag}>BG Engenharia</span>
         </div>
         <div className={styles.tr}>
           <button className={styles.tbtn} title="Novo instrumento" onClick={openNew}>
