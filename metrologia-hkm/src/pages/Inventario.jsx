@@ -2,8 +2,8 @@ import { useState, useMemo } from 'react'
 import { Card, Badge, BtnGhost, BtnPrimary, Spinner, Empty } from '../components/UI.jsx'
 import s from './Pages.module.css'
 
-const TIPOS = ['','Dimensional','Temperatura','Pressão/Força','Elétrico/Outro','Calibrador de Rosca','Inspeção de Solda','Dureza','Outro']
 const STATUS = ['','Calibrado','A vencer','Vencido','Sem calibração']
+const TIPOS  = ['','Dimensional','Temperatura','Pressão/Força','Elétrico/Outro','Calibrador de Rosca','Inspeção de Solda','Dureza','Outro']
 const PER_PAGE = 50
 
 function fmtDate(d) { return d ? new Date(d).toLocaleDateString('pt-BR') : '—' }
@@ -37,10 +37,6 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
   const total = Math.ceil(filtered.length / PER_PAGE)
   const slice = filtered.slice(page * PER_PAGE, (page+1) * PER_PAGE)
 
-  const handleSearch = v => { setSearch(v); setPage(0) }
-  const handleFS     = v => { setFStatus(v); setPage(0) }
-  const handleFT     = v => { setFTipo(v); setPage(0) }
-
   if (loading) return <Spinner />
 
   return (
@@ -60,13 +56,13 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
         <div className={s.toolbar}>
           <input
             placeholder="Buscar por tag, descrição, fabricante, localização..."
-            value={search} onChange={e => handleSearch(e.target.value)}
+            value={search} onChange={e => { setSearch(e.target.value); setPage(0) }}
             style={{flex:1}}
           />
-          <select value={fStatus} onChange={e => handleFS(e.target.value)} style={{width:140}}>
+          <select value={fStatus} onChange={e => { setFStatus(e.target.value); setPage(0) }} style={{width:140}}>
             {STATUS.map(v => <option key={v} value={v}>{v || 'Todos os status'}</option>)}
           </select>
-          <select value={fTipo} onChange={e => handleFT(e.target.value)} style={{width:150}}>
+          <select value={fTipo} onChange={e => { setFTipo(e.target.value); setPage(0) }} style={{width:150}}>
             {TIPOS.map(v => <option key={v} value={v}>{v || 'Todos os tipos'}</option>)}
           </select>
         </div>
@@ -75,34 +71,37 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
           ? <Empty icon="ti-ruler-2" text="Nenhum instrumento encontrado" />
           : <>
             <div style={{overflowX:'auto'}}>
-              <table className={s.tbl} style={{tableLayout:'fixed',width:'100%'}}>
-                <colgroup>
-                  <col style={{width:82}}/><col style={{width:'*'}}/><col style={{width:90}}/>
-                  <col style={{width:120}}/><col style={{width:100}}/><col style={{width:80}}/>
-                  <col style={{width:95}}/><col style={{width:82}}/><col style={{width:52}}/>
-                </colgroup>
+              <table className={s.tbl} style={{minWidth:800}}>
                 <thead>
                   <tr>
-                    <th>Tag</th><th>Descrição</th><th>Tipo</th>
-                    <th>Fabricante</th><th>Faixa</th><th>Período</th>
-                    <th>Critério</th><th>Próx. calib.</th><th></th>
+                    <th style={{width:80}}>Tag</th>
+                    <th>Descrição</th>
+                    <th style={{width:100}}>Tipo</th>
+                    <th style={{width:120}}>Fabricante</th>
+                    <th style={{width:85}}>Critério</th>
+                    <th style={{width:90}}>Próx. calib.</th>
+                    <th style={{width:85}}>Status</th>
+                    <th style={{width:70,textAlign:'center'}}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {slice.map(i => (
                     <tr key={i.id}>
                       <td className={s.mono} style={{fontWeight:500}}>{i.tag}</td>
-                      <td title={i.descricao}>{i.descricao}</td>
-                      <td className={s.muted}>{i.tipo}</td>
-                      <td className={s.muted} title={[i.fabricante,i.modelo].filter(Boolean).join(' ')}>{[i.fabricante,i.modelo].filter(Boolean).join(' ')||'—'}</td>
-                      <td className={s.muted}>{i.faixa||'—'}</td>
-                      <td className={s.muted}>{i.periodicidade||'—'}</td>
+                      <td title={i.descricao} style={{maxWidth:200,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{i.descricao}</td>
+                      <td className={s.muted}>{i.tipo||'—'}</td>
+                      <td className={s.muted} style={{maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[i.fabricante,i.modelo].filter(Boolean).join(' ')||'—'}</td>
                       <td style={{color:'var(--blue)',fontSize:10}}>{i.criterio||'—'}</td>
                       <td className={s.mono}>{fmtDate(i.proxima_cal)}</td>
-                      <td>
-                        <div style={{display:'flex',gap:2}}>
-                          <button className={s.actBtn} title="Editar" onClick={() => onEdit(i)}><i className="ti ti-edit" /></button>
-                          <button className={s.actBtn} title="Excluir" onClick={() => onDelete(i.id)} style={{color:'var(--red)'}}><i className="ti ti-trash" /></button>
+                      <td><Badge status={i.status} /></td>
+                      <td style={{textAlign:'center'}}>
+                        <div style={{display:'flex',gap:4,justifyContent:'center'}}>
+                          <button className={s.actBtn} title="Editar" onClick={() => onEdit(i)}>
+                            <i className="ti ti-edit" />
+                          </button>
+                          <button className={s.actBtn} title="Excluir" onClick={() => onDelete(i.id)} style={{color:'var(--red)'}}>
+                            <i className="ti ti-trash" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -124,4 +123,5 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
     </div>
   )
 }
+
 
