@@ -1,0 +1,103 @@
+.shell {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  grid-template-rows: 50px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Topbar ── */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: var(--surface);
+  border-bottom: 0.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+.tl { display: flex; align-items: center; gap: 10px; }
+.logo {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: var(--blue);
+  color: var(--blue-bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.appname { font-weight: 600; font-size: 14px; letter-spacing: -.01em; }
+.apptag {
+  font-size: 10px; color: var(--text3);
+  background: var(--bg2);
+  border: 0.5px solid var(--border);
+  padding: 2px 8px; border-radius: 99px;
+}
+.tr { display: flex; align-items: center; gap: 8px; }
+.tbtn {
+  display: flex; align-items: center; gap: 5px;
+  background: var(--blue); color: #fff;
+  border: none; padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: background .15s;
+}
+.tbtn:hover { background: #0C447C; }
+.avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--blue-bg); color: var(--blue);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 600; cursor: pointer;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 0.5px solid var(--border);
+  padding: 14px 10px;
+  overflow-y: auto;
+}
+.nsec {
+  font-size: 10px; font-weight: 500;
+  color: var(--text3); letter-spacing: .07em;
+  text-transform: uppercase;
+  padding: 10px 8px 3px;
+}
+.ni {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: none; background: none;
+  font-family: var(--font-sans); font-size: 12px;
+  color: var(--text2); cursor: pointer;
+  text-align: left; transition: all .12s;
+}
+.ni i { font-size: 15px; }
+.ni:hover { background: var(--bg2); color: var(--text); }
+.ni.active { background: var(--blue-bg); color: var(--blue); font-weight: 500; }
+.nbadge {
+  margin-left: auto;
+  font-size: 10px; font-weight: 600;
+  background: var(--red-bg); color: var(--red);
+  border-radius: 99px; padding: 1px 6px;
+}
+
+/* ── Content ── */
+.content {
+  overflow-y: auto;
+  background: var(--bg);
+  padding: 22px;
+}
+.errorBanner {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--red-bg); color: var(--red);
+  border: 0.5px solid #F7C1C1;
+  border-radius: var(--radius); padding: 10px 14px;
+  margin-bottom: 14px; font-size: 12px;
+}
+.errorBanner button {
+  margin-left: auto; background: var(--red); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  padding: 4px 10px; font-size: 11px; cursor: pointer;
+}

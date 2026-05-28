@@ -1,0 +1,62 @@
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 20px;
+}
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 0.5px solid var(--border2);
+  width: 480px; max-width: 100%;
+  max-height: 90vh; display: flex; flex-direction: column;
+  box-shadow: 0 16px 40px rgba(0,0,0,.15);
+}
+.mhead {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 0.5px solid var(--border);
+}
+.mtitle { font-size: 14px; font-weight: 600; }
+.close {
+  background: none; border: none; cursor: pointer;
+  color: var(--text2); font-size: 18px; padding: 2px;
+  border-radius: var(--radius-sm);
+}
+.close:hover { background: var(--bg2); }
+.body {
+  padding: 16px 18px;
+  overflow-y: auto; flex: 1;
+}
+.footer {
+  display: flex; gap: 8px; justify-content: flex-end;
+  padding: 12px 18px;
+  border-top: 0.5px solid var(--border);
+}
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.frow { margin-bottom: 10px; }
+.label { display: block; font-size: 11px; color: var(--text2); font-weight: 500; margin-bottom: 4px; }
+.frow input, .frow select, .frow textarea {
+  width: 100%;
+}
+.hint {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text2);
+  background: var(--blue-bg);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px; margin-top: 4px;
+}
+.hint strong { color: var(--blue); }
+.hint button {
+  margin-left: auto; background: var(--blue); color: #fff;
+  border: none; border-radius: 4px; padding: 2px 8px;
+  font-size: 11px; cursor: pointer;
+}
+.err {
+  display: flex; align-items: center; gap: 5px;
+  color: var(--red); font-size: 11px;
+  background: var(--red-bg);
+  border-radius: var(--radius-sm); padding: 6px 8px;
+  margin-top: 8px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

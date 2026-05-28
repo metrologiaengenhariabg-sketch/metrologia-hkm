@@ -1,0 +1,94 @@
+.pageHeader {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 12px;
+  margin-bottom: 18px;
+}
+.pageTitle { font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+.pageSub   { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+.btnPrimary {
+  background: var(--blue); color: #fff;
+  border: none; padding: 7px 13px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans); font-size: 12px; font-weight: 500;
+  cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+}
+.btnPrimary:hover { background: #0C447C; }
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px; margin-bottom: 16px;
+}
+
+.twoCols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px; margin-bottom: 14px;
+}
+
+/* ── Table ── */
+.tbl { width: 100%; border-collapse: collapse; font-size: 11px; }
+.tbl th {
+  padding: 8px 12px; text-align: left;
+  font-size: 10px; font-weight: 600; letter-spacing: .03em;
+  color: var(--text2); text-transform: uppercase;
+  border-bottom: 0.5px solid var(--border);
+  background: var(--bg2);
+  white-space: nowrap;
+}
+.tbl td {
+  padding: 9px 12px;
+  border-bottom: 0.5px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 0;
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: var(--bg2); }
+
+.mono  { font-family: var(--font-mono); font-size: 10px !important; }
+.muted { color: var(--text2) !important; }
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-bottom: 0.5px solid var(--border);
+  flex-wrap: wrap;
+}
+
+/* ── Action buttons ── */
+.actBtn {
+  background: none; border: none; cursor: pointer;
+  padding: 3px 5px; border-radius: var(--radius-sm);
+  color: var(--text2); font-size: 13px;
+  transition: background .12s;
+}
+.actBtn:hover { background: var(--bg2); color: var(--text); }
+
+/* ── Cal items ── */
+.calItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 16px;
+  border-bottom: 0.5px solid var(--border);
+}
+.calItem:last-child { border-bottom: none; }
+.calDate { font-family: var(--font-mono); font-size: 10px; color: var(--text2); min-width: 72px; }
+.calName { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.calTag  { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+/* ── Pager ── */
+.pager {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-top: 0.5px solid var(--border);
+  font-size: 11px; color: var(--text2);
+}
+.pager button {
+  background: none; border: 0.5px solid var(--border2);
+  border-radius: var(--radius-sm); padding: 3px 10px;
+  font-size: 11px; cursor: pointer; color: var(--text);
+}
+.pager button:hover:not(:disabled) { background: var(--bg2); }
+.pager button:disabled { opacity: .4; cursor: not-allowed; }
