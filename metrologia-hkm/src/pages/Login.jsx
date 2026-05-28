@@ -22,7 +22,7 @@ export default function Login({ onLogin }) {
   return (
     <div className={s.bg}>
       <div className={s.card}>
-        <img src="/BG_LOGO__1__sem_o_fundo.png" alt="BG Metrologia" style={{height:70,width:'auto',marginBottom:16}} />
+        <img src="/bg_Logo.jpeg" alt="BG Metrologia" style={{height:80,width:'auto',maxWidth:220,objectFit:'contain',borderRadius:8,marginBottom:16}} />
         <h1 className={s.title}>MetroControl</h1>
         <p className={s.sub}>BG Metrologia & Engenharia · Sistema de Gestão</p>
 
@@ -57,5 +57,4 @@ export default function Login({ onLogin }) {
     </div>
   )
 }
-
 
