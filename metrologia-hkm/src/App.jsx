@@ -1,22 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
-import { fetchInstrumentos, fetchStats, deleteInstrumento } from './lib/supabase'
+import { supabase, fetchInstrumentos, fetchStats, deleteInstrumento } from './lib/supabase'
 import Dashboard   from './pages/Dashboard.jsx'
 import Inventario  from './pages/Inventario.jsx'
 import Calibracoes from './pages/Calibracoes.jsx'
 import Relatorio   from './pages/Relatorio.jsx'
 import ITCQ        from './pages/ITCQ.jsx'
+import Login       from './pages/Login.jsx'
 import ModalInstrumento from './components/ModalInstrumento.jsx'
 import styles from './App.module.css'
 
 const NAV = [
-  { id: 'dashboard',   label: 'Dashboard',      icon: 'ti-layout-dashboard' },
-  { id: 'inventario',  label: 'Inventário',      icon: 'ti-ruler-2',         badge: true },
-  { id: 'calibracoes', label: 'Calibrações',     icon: 'ti-calendar-check' },
-  { id: 'relatorio',   label: 'Visão geral',     icon: 'ti-chart-bar',       section: 'Relatórios' },
-  { id: 'itcq',        label: 'IT-CQ-008',       icon: 'ti-file-description', section: 'Referência' },
+  { id: 'dashboard',   label: 'Dashboard',    icon: 'ti-layout-dashboard' },
+  { id: 'inventario',  label: 'Inventário',   icon: 'ti-ruler-2', badge: true },
+  { id: 'calibracoes', label: 'Calibrações',  icon: 'ti-calendar-check' },
+  { id: 'relatorio',   label: 'Visão geral',  icon: 'ti-chart-bar', section: 'Relatórios' },
+  { id: 'itcq',        label: 'IT-CQ-008',    icon: 'ti-file-description', section: 'Referência' },
 ]
 
 export default function App() {
+  const [session,     setSession]     = useState(null)
+  const [authLoading, setAuthLoading] = useState(true)
   const [page,        setPage]        = useState('dashboard')
   const [instruments, setInstruments] = useState([])
   const [stats,       setStats]       = useState(null)
@@ -25,13 +28,28 @@ export default function App() {
   const [modal,       setModal]       = useState(false)
   const [editItem,    setEditItem]    = useState(null)
 
+  // ── Auth ──────────────────────────────────────────────────
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      setAuthLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSession(session)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+  }
+
+  // ── Data ──────────────────────────────────────────────────
   const load = useCallback(async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true); setError(null)
       const [data, st] = await Promise.all([fetchInstrumentos(), fetchStats()])
-      setInstruments(data)
-      setStats(st)
+      setInstruments(data); setStats(st)
     } catch (e) {
       setError(e.message)
     } finally {
@@ -39,26 +57,31 @@ export default function App() {
     }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { if (session) load() }, [session, load])
 
-  const openNew  = ()    => { setEditItem(null); setModal(true) }
-  const openEdit = item  => { setEditItem(item); setModal(true) }
-  const onSaved  = ()    => { setModal(false); load() }
-
+  const openNew  = ()   => { setEditItem(null); setModal(true) }
+  const openEdit = item => { setEditItem(item); setModal(true) }
+  const onSaved  = ()   => { setModal(false); load() }
   const onDelete = async id => {
     if (!confirm('Remover este instrumento permanentemente?')) return
-    await deleteInstrumento(id)
-    load()
+    await deleteInstrumento(id); load()
   }
 
   const urgentes = instruments.filter(i => i.status === 'Vencido' || i.status === 'A vencer')
   const badge    = urgentes.length || ''
-
   const pageProps = { instruments, stats, loading, onEdit: openEdit, onDelete, onNew: openNew }
+
+  // ── Render ────────────────────────────────────────────────
+  if (authLoading) return (
+    <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100vh',color:'var(--text2)',fontSize:13}}>
+      <i className="ti ti-loader-2" style={{animation:'spin .8s linear infinite',marginRight:8}} /> Carregando…
+    </div>
+  )
+
+  if (!session) return <Login />
 
   return (
     <div className={styles.shell}>
-      {/* ── Top bar ── */}
       <header className={styles.topbar}>
         <div className={styles.tl}>
           <div className={styles.logo}><i className="ti ti-ruler-measure" /></div>
@@ -66,14 +89,14 @@ export default function App() {
           <span className={styles.apptag}>BG Engenharia</span>
         </div>
         <div className={styles.tr}>
-          <button className={styles.tbtn} title="Novo instrumento" onClick={openNew}>
-            <i className="ti ti-plus" /> Novo
+          <button className={styles.tbtn} onClick={openNew}><i className="ti ti-plus" /> Novo</button>
+          <button className={styles.tbtnLogout} onClick={handleLogout} title="Sair">
+            <i className="ti ti-logout" />
           </button>
-          <div className={styles.avatar}>HK</div>
+          <div className={styles.avatar}>BG</div>
         </div>
       </header>
 
-      {/* ── Sidebar ── */}
       <nav className={styles.sidebar}>
         {NAV.map(item => (
           <div key={item.id}>
@@ -90,11 +113,10 @@ export default function App() {
         ))}
       </nav>
 
-      {/* ── Content ── */}
       <main className={styles.content}>
         {error && (
           <div className={styles.errorBanner}>
-            <i className="ti ti-alert-triangle" /> Erro ao conectar ao Supabase: {error}
+            <i className="ti ti-alert-triangle" /> Erro: {error}
             <button onClick={load}>Tentar novamente</button>
           </div>
         )}
@@ -105,7 +127,6 @@ export default function App() {
         {page === 'itcq'        && <ITCQ />}
       </main>
 
-      {/* ── Modal ── */}
       {modal && (
         <ModalInstrumento
           item={editItem}
@@ -116,3 +137,4 @@ export default function App() {
     </div>
   )
 }
+
