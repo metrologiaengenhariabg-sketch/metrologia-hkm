@@ -15,7 +15,7 @@ function exportCSV(list) {
   const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')
   const a    = document.createElement('a')
   a.href     = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv)
-  a.download = 'HKM_Instrumentos.csv'
+  a.download = 'BG_Instrumentos.csv'
   a.click()
 }
 
@@ -124,3 +124,4 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
     </div>
   )
 }
+
