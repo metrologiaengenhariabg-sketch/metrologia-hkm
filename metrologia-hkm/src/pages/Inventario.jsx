@@ -10,7 +10,7 @@ function fmtDate(d) { return d ? new Date(d).toLocaleDateString('pt-BR') : '—'
 
 function exportCSV(list) {
   const cols = ['tag','descricao','tipo','fabricante','modelo','localizacao','faixa','periodicidade','criterio','ultima_cal','proxima_cal','status']
-  const head = ['Tag','Descrição','Tipo','Fabricante','Modelo','Localização','Faixa','Periodicidade','Critério IT-CQ-008','Última Calibração','Próxima Calibração','Status']
+  const head = ['Tag','Descrição','Tipo','Fabricante','Modelo','Localização','Faixa','Periodicidade','Critério','Última Calibração','Próxima Calibração','Status']
   const rows = [head, ...list.map(i => cols.map(c => i[c] || ''))]
   const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')
   const a    = document.createElement('a')
@@ -70,45 +70,43 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
         {slice.length === 0
           ? <Empty icon="ti-ruler-2" text="Nenhum instrumento encontrado" />
           : <>
-            <div style={{overflowX:'auto'}}>
-              <table className={s.tbl} style={{minWidth:800}}>
-                <thead>
-                  <tr>
-                    <th style={{width:80}}>Tag</th>
-                    <th>Descrição</th>
-                    <th style={{width:100}}>Tipo</th>
-                    <th style={{width:120}}>Fabricante</th>
-                    <th style={{width:85}}>Critério</th>
-                    <th style={{width:90}}>Próx. calib.</th>
-                    <th style={{width:85}}>Status</th>
-                    <th style={{width:70,textAlign:'center'}}>Ações</th>
+            <table className={s.tbl}>
+              <thead>
+                <tr>
+                  <th style={{width:'10%'}}>Tag</th>
+                  <th style={{width:'25%'}}>Descrição</th>
+                  <th style={{width:'12%'}}>Tipo</th>
+                  <th style={{width:'13%'}}>Fabricante</th>
+                  <th style={{width:'10%'}}>Critério</th>
+                  <th style={{width:'12%'}}>Próx. calib.</th>
+                  <th style={{width:'10%'}}>Status</th>
+                  <th style={{width:'8%',textAlign:'center'}}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {slice.map(i => (
+                  <tr key={i.id}>
+                    <td style={{fontFamily:'monospace',fontSize:11,fontWeight:600}}>{i.tag}</td>
+                    <td title={i.descricao}>{i.descricao}</td>
+                    <td style={{color:'var(--text2)',fontSize:11}}>{i.tipo||'—'}</td>
+                    <td style={{color:'var(--text2)',fontSize:11}}>{i.fabricante||'—'}</td>
+                    <td style={{color:'var(--blue)',fontSize:11}}>{i.criterio||'—'}</td>
+                    <td style={{fontFamily:'monospace',fontSize:11}}>{fmtDate(i.proxima_cal)}</td>
+                    <td><Badge status={i.status} /></td>
+                    <td style={{textAlign:'center',whiteSpace:'nowrap'}}>
+                      <button
+                        onClick={() => onEdit(i)}
+                        style={{background:'var(--blue-bg)',color:'var(--blue)',border:'none',borderRadius:4,padding:'3px 7px',cursor:'pointer',fontSize:11,fontWeight:500,marginRight:3}}
+                      >✏️</button>
+                      <button
+                        onClick={() => onDelete(i.id)}
+                        style={{background:'var(--red-bg)',color:'var(--red)',border:'none',borderRadius:4,padding:'3px 7px',cursor:'pointer',fontSize:11,fontWeight:500}}
+                      >🗑️</button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {slice.map(i => (
-                    <tr key={i.id}>
-                      <td className={s.mono} style={{fontWeight:500}}>{i.tag}</td>
-                      <td title={i.descricao} style={{maxWidth:130,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{i.descricao}</td>
-                      <td className={s.muted}>{i.tipo||'—'}</td>
-                      <td className={s.muted} style={{maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{[i.fabricante,i.modelo].filter(Boolean).join(' ')||'—'}</td>
-                      <td style={{color:'var(--blue)',fontSize:10}}>{i.criterio||'—'}</td>
-                      <td className={s.mono}>{fmtDate(i.proxima_cal)}</td>
-                      <td><Badge status={i.status} /></td>
-                      <td style={{textAlign:'center'}}>
-                        <div style={{display:'flex',gap:4,justifyContent:'center'}}>
-                          <button className={s.actBtn} style={{background:"var(--blue-bg)",color:"var(--blue)",padding:"3px 8px",borderRadius:"4px",border:"none",cursor:"pointer",fontSize:11,fontWeight:500}} onClick={() => onEdit(i)}>
-                             Editar
-                          </button>
-                          <button className={s.actBtn} style={{background:"var(--red-bg)",color:"var(--red)",padding:"3px 8px",borderRadius:"4px",border:"none",cursor:"pointer",fontSize:11,fontWeight:500}} onClick={() => onDelete(i.id)} style={{color:'var(--red)'}}>
-                             Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
             {total > 1 && (
               <div className={s.pager}>
                 <button onClick={() => setPage(p => Math.max(0,p-1))} disabled={page===0}>‹ Anterior</button>
@@ -123,6 +121,5 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
     </div>
   )
 }
-// style patch applied
 
 
