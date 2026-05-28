@@ -96,11 +96,11 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
                       <td><Badge status={i.status} /></td>
                       <td style={{textAlign:'center'}}>
                         <div style={{display:'flex',gap:4,justifyContent:'center'}}>
-                          <button className={s.actBtn} title="Editar" onClick={() => onEdit(i)}>
-                            <i className="ti ti-edit" />
+                          <button className={s.actBtn} style={{background:"var(--blue-bg)",color:"var(--blue)",padding:"3px 8px",borderRadius:"4px",border:"none",cursor:"pointer",fontSize:11,fontWeight:500}} onClick={() => onEdit(i)}>
+                             Editar
                           </button>
-                          <button className={s.actBtn} title="Excluir" onClick={() => onDelete(i.id)} style={{color:'var(--red)'}}>
-                            <i className="ti ti-trash" />
+                          <button className={s.actBtn} style={{background:"var(--red-bg)",color:"var(--red)",padding:"3px 8px",borderRadius:"4px",border:"none",cursor:"pointer",fontSize:11,fontWeight:500}} onClick={() => onDelete(i.id)} style={{color:'var(--red)'}}>
+                             Excluir
                           </button>
                         </div>
                       </td>
@@ -123,5 +123,5 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
     </div>
   )
 }
-
+// style patch applied
 
