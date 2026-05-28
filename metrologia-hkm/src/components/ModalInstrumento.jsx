@@ -37,9 +37,9 @@ function suggestCriterio(tag) {
 }
 
 const empty = {
-  tag:'', descricao:'', tipo:'Dimensional', fabricante:'',
+  tag:'', descricao:'', tipo:'', fabricante:'',
   modelo:'', serie:'', localizacao:'', faixa:'',
-  periodicidade:'12 meses', criterio:'', ultima_cal:'', proxima_cal:'', observacao:''
+  periodicidade:'', criterio:'', ultima_cal:'', proxima_cal:'', observacao:''
 }
 
 export default function ModalInstrumento({ item, onClose, onSaved }) {
@@ -55,8 +55,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async () => {
-    if (!form.descricao.trim()) { setErr('Informe a descrição.'); return }
-    if (!form.tag.trim())       { setErr('Informe a tag/número.'); return }
+    if (!form.tag.trim() && !form.descricao.trim()) { setErr('Informe pelo menos a Tag ou a Descrição.'); return }
     setSaving(true); setErr('')
     try {
       const payload = {
@@ -94,10 +93,8 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
             <F label="Tag / nº patrimônio">
               <input value={form.tag} onChange={e => set('tag', e.target.value)} placeholder="Ex: PAQ-001" />
             </F>
-            <F label="Tipo">
-              <select value={form.tipo} onChange={e => set('tipo', e.target.value)}>
-                {TIPOS.map(t => <option key={t}>{t}</option>)}
-              </select>
+            <F label="Tipo (opcional)">
+              <input value={form.tipo} onChange={e => set('tipo', e.target.value)} placeholder="Ex: Dimensional, Temperatura..." />
             </F>
           </div>
 
