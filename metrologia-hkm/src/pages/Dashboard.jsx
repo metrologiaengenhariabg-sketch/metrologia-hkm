@@ -43,7 +43,7 @@ export default function Dashboard({ instruments, stats, loading, onNew }) {
       <div className={s.pageHeader}>
         <div>
           <h1 className={s.pageTitle}>Dashboard</h1>
-          <p className={s.pageSub}>HKM Indústria e Comércio · IT-CQ-008 Rev.03</p>
+          <p className={s.pageSub}>BG Engenharia · IT-CQ-008 Rev.03</p>
         </div>
         <button className={s.btnPrimary} onClick={onNew}><i className="ti ti-plus" /> Novo instrumento</button>
       </div>
@@ -130,3 +130,4 @@ export default function Dashboard({ instruments, stats, loading, onNew }) {
     </div>
   )
 }
+
