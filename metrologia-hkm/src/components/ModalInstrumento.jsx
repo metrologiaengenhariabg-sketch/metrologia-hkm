@@ -1,13 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { upsertInstrumento } from '../lib/supabase'
 import { BtnPrimary, BtnGhost } from './UI.jsx'
 import s from './ModalInstrumento.module.css'
-
-const TIPOS = [
-  'Dimensional','Temperatura','Pressão/Força',
-  'Elétrico/Outro','Calibrador de Rosca',
-  'Inspeção de Solda','Dureza','Outro'
-]
 
 const CRITERIOS_MAP = {
   ALC:'±5% da leitura', MUL:'±5% da leitura', BAL:'1% da leitura',
@@ -17,17 +11,16 @@ const CRITERIOS_MAP = {
   CS:'±0,3mm', CNP:'±0,2mm', CC:'2% da leitura', MI:'±0,3°',
   CNV:'3% da leitura', CT:'3°C', CMD:'0,01s', DG:'±2,0%',
   DUR:'2 Shore / 1,3 Shore', MTK:'10 HLD', ESC:'1,3mm',
-  EA:'1° / 0,2mm', EC:"0°30' / 0,05mm", GP:"0°10'", HD:'±0,12W',
+  EA:"1° / 0,2mm", EC:"0°30' / 0,05mm", GP:"0°10'", HD:'±0,12W',
   LUX:'±15 Lx', MAP:'1,3% do FE', MAN:'3% do FE', MN:'3% do FE',
   ETA:'1,1 MPa', MVA:'3% do FE', BMP:'±100g', MC:'0,04µm',
   MEE:'0,04µm', SP:'0,04µm', MR:'0,007mm', ME:'0,007mm',
   MIT:'0,007mm', NO:'≤1mm/Km', NB:'0,1mm', PQ:'0,07mm',
   PAQ:'0,07mm', PQP:'0,07mm', REG:'6,7°C', RA:'0,07mm',
-  RC:'0,07mm', REC:'0,07mm', RUG:'0,13µm', SUB:'0,007mm',
-  TGR:"0°15'", TRG:"0°15'", TA:'0,7°', TDL:'0,7°',
-  TER:'2°C / 6,7%UR', TI:'5°C', PIR:'2°C', TP:'6,7°C',
-  TOQ:'4% da leitura', TR:'1,3mm', TD:'±0,2mL',
-  YO:'±0,2g', PT:'±0,2g', BB:'1 l/min', TEA:'1,1 MPa',
+  RC:'0,07mm', RUG:'0,13µm', SUB:'0,007mm', TGR:"0°15'",
+  TRG:"0°15'", TA:'0,7°', TDL:'0,7°', TER:'2°C / 6,7%UR',
+  TI:'5°C', PIR:'2°C', TP:'6,7°C', TOQ:'4% da leitura',
+  TR:'1,3mm', TD:'±0,2mL', YO:'±0,2g', PT:'±0,2g', BB:'1 l/min',
 }
 
 function suggestCriterio(tag) {
@@ -36,32 +29,34 @@ function suggestCriterio(tag) {
   return CRITERIOS_MAP[upper] || ''
 }
 
-const empty = {
-  tag:'', descricao:'', tipo:'', fabricante:'',
-  modelo:'', serie:'', localizacao:'', faixa:'',
-  periodicidade:'', criterio:'', ultima_cal:'', proxima_cal:'', observacao:''
-}
-
 export default function ModalInstrumento({ item, onClose, onSaved }) {
-  const [form,    setForm]    = useState(item ? { ...item, ultima_cal: item.ultima_cal?.slice(0,10) || '', proxima_cal: item.proxima_cal?.slice(0,10) || '' } : empty)
-  const [saving,  setSaving]  = useState(false)
-  const [err,     setErr]     = useState('')
-  const [suggest, setSuggest] = useState('')
+  const [tag,          setTag]          = useState(item?.tag || '')
+  const [descricao,    setDescricao]    = useState(item?.descricao || '')
+  const [tipo,         setTipo]         = useState(item?.tipo || '')
+  const [fabricante,   setFabricante]   = useState(item?.fabricante || '')
+  const [modelo,       setModelo]       = useState(item?.modelo || '')
+  const [serie,        setSerie]        = useState(item?.serie || '')
+  const [localizacao,  setLocalizacao]  = useState(item?.localizacao || '')
+  const [faixa,        setFaixa]        = useState(item?.faixa || '')
+  const [periodicidade,setPeriodicidade]= useState(item?.periodicidade || '')
+  const [criterio,     setCriterio]     = useState(item?.criterio || '')
+  const [ultima_cal,   setUltimaCal]    = useState(item?.ultima_cal?.slice(0,10) || '')
+  const [proxima_cal,  setProximaCal]   = useState(item?.proxima_cal?.slice(0,10) || '')
+  const [observacao,   setObservacao]   = useState(item?.observacao || '')
+  const [saving,       setSaving]       = useState(false)
+  const [err,          setErr]          = useState('')
 
-  useEffect(() => {
-    setSuggest(suggestCriterio(form.tag))
-  }, [form.tag])
-
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  const suggest = suggestCriterio(tag)
 
   const handleSave = async () => {
-    if (!form.tag.trim() && !form.descricao.trim()) { setErr('Informe pelo menos a Tag ou a Descrição.'); return }
+    if (!tag.trim() && !descricao.trim()) { setErr('Informe pelo menos a Tag ou a Descrição.'); return }
     setSaving(true); setErr('')
     try {
       const payload = {
-        ...form,
-        ultima_cal:   form.ultima_cal   || null,
-        proxima_cal:  form.proxima_cal  || null,
+        tag, descricao, tipo, fabricante, modelo, serie,
+        localizacao, faixa, periodicidade, criterio, observacao,
+        ultima_cal:  ultima_cal  || null,
+        proxima_cal: proxima_cal || null,
       }
       if (item?.id) payload.id = item.id
       await upsertInstrumento(payload)
@@ -73,13 +68,6 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     }
   }
 
-  const F = ({ label, children }) => (
-    <div className={s.frow}>
-      <label className={s.label}>{label}</label>
-      {children}
-    </div>
-  )
-
   return (
     <div className={s.overlay} onClick={e => e.target === e.currentTarget && onClose()}>
       <div className={s.modal}>
@@ -90,55 +78,80 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
 
         <div className={s.body}>
           <div className={s.grid2}>
-            <F label="Tag / nº patrimônio">
-              <input value={form.tag} onChange={e => set('tag', e.target.value)} placeholder="Ex: PAQ-001" />
-            </F>
-            <F label="Tipo (opcional)">
-              <input value={form.tipo} onChange={e => set('tipo', e.target.value)} placeholder="Ex: Dimensional, Temperatura..." />
-            </F>
+            <div className={s.frow}>
+              <label className={s.label}>Tag / nº patrimônio</label>
+              <input value={tag} onChange={e => setTag(e.target.value)} placeholder="Ex: PAQ-001" />
+            </div>
+            <div className={s.frow}>
+              <label className={s.label}>Tipo (opcional)</label>
+              <input value={tipo} onChange={e => setTipo(e.target.value)} placeholder="Ex: Dimensional..." />
+            </div>
           </div>
 
-          <F label="Descrição">
-            <input value={form.descricao} onChange={e => set('descricao', e.target.value)} placeholder="Ex: Paquímetro digital 150mm" style={{width:'100%'}}/>
-          </F>
-
-          <div className={s.grid2}>
-            <F label="Fabricante"><input value={form.fabricante} onChange={e => set('fabricante', e.target.value)} /></F>
-            <F label="Modelo">    <input value={form.modelo}     onChange={e => set('modelo',     e.target.value)} /></F>
-          </div>
-
-          <div className={s.grid2}>
-            <F label="Série">         <input value={form.serie}        onChange={e => set('serie',        e.target.value)} /></F>
-            <F label="Localização">   <input value={form.localizacao}  onChange={e => set('localizacao',  e.target.value)} /></F>
+          <div className={s.frow}>
+            <label className={s.label}>Descrição</label>
+            <input value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Ex: Paquímetro digital 150mm" style={{width:'100%'}} />
           </div>
 
           <div className={s.grid2}>
-            <F label="Última calibração">  <input type="date" value={form.ultima_cal}  onChange={e => set('ultima_cal',  e.target.value)} /></F>
-            <F label="Próxima calibração"> <input type="date" value={form.proxima_cal} onChange={e => set('proxima_cal', e.target.value)} /></F>
+            <div className={s.frow}>
+              <label className={s.label}>Fabricante</label>
+              <input value={fabricante} onChange={e => setFabricante(e.target.value)} />
+            </div>
+            <div className={s.frow}>
+              <label className={s.label}>Modelo</label>
+              <input value={modelo} onChange={e => setModelo(e.target.value)} />
+            </div>
           </div>
 
           <div className={s.grid2}>
-            <F label="Periodicidade">
-              <input value={form.periodicidade} onChange={e => set('periodicidade', e.target.value)} placeholder="Ex: 12 meses" />
-            </F>
-            <F label="Faixa de utilização">
-              <input value={form.faixa} onChange={e => set('faixa', e.target.value)} placeholder="Ex: 0–150mm" />
-            </F>
+            <div className={s.frow}>
+              <label className={s.label}>Série</label>
+              <input value={serie} onChange={e => setSerie(e.target.value)} />
+            </div>
+            <div className={s.frow}>
+              <label className={s.label}>Localização</label>
+              <input value={localizacao} onChange={e => setLocalizacao(e.target.value)} />
+            </div>
           </div>
 
-          <F label="Critério de aceitação (IT-CQ-008)">
-            <input value={form.criterio} onChange={e => set('criterio', e.target.value)} placeholder="Ex: 0,07mm" style={{width:'100%'}} />
-            {suggest && !form.criterio && (
+          <div className={s.grid2}>
+            <div className={s.frow}>
+              <label className={s.label}>Última calibração</label>
+              <input type="date" value={ultima_cal} onChange={e => setUltimaCal(e.target.value)} />
+            </div>
+            <div className={s.frow}>
+              <label className={s.label}>Próxima calibração</label>
+              <input type="date" value={proxima_cal} onChange={e => setProximaCal(e.target.value)} />
+            </div>
+          </div>
+
+          <div className={s.grid2}>
+            <div className={s.frow}>
+              <label className={s.label}>Periodicidade</label>
+              <input value={periodicidade} onChange={e => setPeriodicidade(e.target.value)} placeholder="Ex: 12 meses" />
+            </div>
+            <div className={s.frow}>
+              <label className={s.label}>Faixa de utilização</label>
+              <input value={faixa} onChange={e => setFaixa(e.target.value)} placeholder="Ex: 0–150mm" />
+            </div>
+          </div>
+
+          <div className={s.frow}>
+            <label className={s.label}>Critério de aceitação (IT-CQ-008)</label>
+            <input value={criterio} onChange={e => setCriterio(e.target.value)} placeholder="Ex: 0,07mm" style={{width:'100%'}} />
+            {suggest && !criterio && (
               <div className={s.hint}>
                 Sugestão IT-CQ-008: <strong>{suggest}</strong>
-                <button onClick={() => set('criterio', suggest)}>Usar</button>
+                <button onClick={() => setCriterio(suggest)}>Usar</button>
               </div>
             )}
-          </F>
+          </div>
 
-          <F label="Observação">
-            <textarea rows={2} value={form.observacao} onChange={e => set('observacao', e.target.value)} style={{width:'100%', resize:'none'}} />
-          </F>
+          <div className={s.frow}>
+            <label className={s.label}>Observação</label>
+            <textarea rows={2} value={observacao} onChange={e => setObservacao(e.target.value)} style={{width:'100%', resize:'none'}} />
+          </div>
 
           {err && <p className={s.err}><i className="ti ti-alert-circle" /> {err}</p>}
         </div>
@@ -146,10 +159,11 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
         <div className={s.footer}>
           <BtnGhost onClick={onClose}>Cancelar</BtnGhost>
           <BtnPrimary onClick={handleSave} disabled={saving}>
-            {saving ? <><i className="ti ti-loader-2" style={{animation:'spin .8s linear infinite',display:'inline-block'}} /> Salvando…</> : 'Salvar instrumento'}
+            {saving ? 'Salvando…' : 'Salvar instrumento'}
           </BtnPrimary>
         </div>
       </div>
     </div>
   )
 }
+
