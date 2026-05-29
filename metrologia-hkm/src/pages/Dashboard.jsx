@@ -19,7 +19,7 @@ export default function Dashboard({ instruments, stats, loading, onNew }) {
   const vencidos  = instruments.filter(i => i.status === 'Vencido')
   const avencer   = instruments.filter(i => i.status === 'A vencer')
   const calibrados = instruments.filter(i => i.status === 'Calibrado')
-  const semcal    = instruments.filter(i => i.status === 'Sem calibração')
+  const semcal    = instruments.filter(i => i.status === 'Inativo')
 
   const urgentes = [...vencidos, ...avencer]
     .sort((a,b) => new Date(a.proxima_cal) - new Date(b.proxima_cal))
@@ -34,9 +34,9 @@ export default function Dashboard({ instruments, stats, loading, onNew }) {
     'Calibrado': calibrados.length,
     'A vencer':  avencer.length,
     'Vencido':   vencidos.length,
-    'Sem calibração': semcal.length,
+    'Inativo': semcal.length,
   }
-  const cols = { 'Calibrado':'var(--green)', 'A vencer':'var(--orange)', 'Vencido':'var(--red)', 'Sem calibração':'var(--gray)' }
+  const cols = { 'Calibrado':'var(--green)', 'A vencer':'var(--orange)', 'Vencido':'var(--red)', 'Inativo':'var(--gray)' }
 
   return (
     <div>
@@ -56,7 +56,7 @@ export default function Dashboard({ instruments, stats, loading, onNew }) {
         <KPICard icon="ti-circle-check"    value={calibrados.length}  label="Calibrados"            color="var(--green)"  />
         <KPICard icon="ti-clock"           value={avencer.length}     label="A vencer (30d)"        color="var(--orange)" />
         <KPICard icon="ti-alert-triangle"  value={vencidos.length}    label="Calibração vencida"    color="var(--red)"    />
-        <KPICard icon="ti-minus-vertical"  value={semcal.length}      label="Sem calibração"        color="var(--gray)"   />
+        <KPICard icon="ti-minus-vertical"  value={semcal.length}      label="Inativo"        color="var(--gray)"   />
       </div>
 
       <div className={s.twoCols}>
