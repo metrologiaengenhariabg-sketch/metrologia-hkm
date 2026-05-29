@@ -42,6 +42,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
   const [faixa,        setFaixa]        = useState(item?.faixa || '')
   const [periodicidade,setPeriodicidade]= useState(item?.periodicidade || '')
   const [criterio,     setCriterio]     = useState(item?.criterio || '')
+  const [calibrado_por, setCalibradoPor] = useState(item?.calibrado_por || '')
   const [ultima_cal,   setUltimaCal]    = useState(item?.ultima_cal?.slice(0,10) || '')
   const [proxima_cal,  setProximaCal]   = useState(item?.proxima_cal?.slice(0,10) || '')
   const [observacao,   setObservacao]   = useState(item?.observacao || '')
@@ -56,7 +57,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     try {
       const payload = {
         tag, descricao, tipo, fabricante, modelo, serie,
-        localizacao, responsavel, setor, faixa, periodicidade, criterio, observacao,
+        localizacao, responsavel, setor, calibrado_por, faixa, periodicidade, criterio, observacao,
         ultima_cal:  ultima_cal  || null,
         proxima_cal: proxima_cal || null,
       }
@@ -137,6 +138,11 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
               <label className={s.label}>Próxima calibração</label>
               <input type="date" value={proxima_cal} onChange={e => setProximaCal(e.target.value)} />
             </div>
+          </div>
+
+          <div className={s.frow}>
+            <label className={s.label}>Calibrado por (laboratório / técnico)</label>
+            <input value={calibrado_por} onChange={e => setCalibradoPor(e.target.value)} placeholder="Ex: Lab. ABC, João Silva..." style={{width:'100%'}} />
           </div>
 
           <div className={s.grid2}>
