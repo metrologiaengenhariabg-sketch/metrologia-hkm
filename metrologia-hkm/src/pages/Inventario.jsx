@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Card, Badge, BtnGhost, BtnPrimary, Spinner, Empty } from '../components/UI.jsx'
 import s from './Pages.module.css'
 
-const STATUS = ['','Calibrado','A vencer','Vencido','Sem calibração']
+const STATUS = ['','Calibrado','A vencer','Vencido','Inativo']
 const TIPOS  = ['','Dimensional','Temperatura','Pressão/Força','Elétrico/Outro','Calibrador de Rosca','Inspeção de Solda','Dureza','Outro']
 const PER_PAGE = 50
 
@@ -70,14 +70,16 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
             <table className={s.tbl}>
               <thead>
                 <tr>
-                  <th style={{width:'10%'}}>Tag</th>
-                  <th style={{width:'25%'}}>Descrição</th>
-                  <th style={{width:'12%'}}>Tipo</th>
-                  <th style={{width:'13%'}}>Fabricante</th>
-                  <th style={{width:'10%'}}>Critério</th>
-                  <th style={{width:'12%'}}>Próx. calib.</th>
-                  <th style={{width:'10%'}}>Status</th>
-                  <th style={{width:'8%',textAlign:'center'}}>Ações</th>
+                  <th style={{width:'9%'}}>Tag</th>
+                  <th style={{width:'18%'}}>Descrição</th>
+                  <th style={{width:'9%'}}>Tipo</th>
+                  <th style={{width:'11%'}}>Fabricante</th>
+                  <th style={{width:'11%'}}>Responsável</th>
+                  <th style={{width:'9%'}}>Setor</th>
+                  <th style={{width:'9%'}}>Critério</th>
+                  <th style={{width:'10%'}}>Próx. calib.</th>
+                  <th style={{width:'8%'}}>Status</th>
+                  <th style={{width:'6%',textAlign:'center'}}>Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -87,6 +89,8 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
                     <td title={i.descricao}>{i.descricao}</td>
                     <td style={{color:'var(--text2)',fontSize:11}}>{i.tipo||'—'}</td>
                     <td style={{color:'var(--text2)',fontSize:11}}>{i.fabricante||'—'}</td>
+                    <td style={{color:'var(--text2)',fontSize:11}}>{i.responsavel||'—'}</td>
+                    <td style={{color:'var(--text2)',fontSize:11}}>{i.setor||'—'}</td>
                     <td style={{color:'var(--blue)',fontSize:11}}>{i.criterio||'—'}</td>
                     <td style={{fontFamily:'monospace',fontSize:11}}>{fmtDate(i.proxima_cal)}</td>
                     <td><Badge status={i.status} /></td>
