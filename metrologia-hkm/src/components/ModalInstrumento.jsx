@@ -37,6 +37,8 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
   const [modelo,       setModelo]       = useState(item?.modelo || '')
   const [serie,        setSerie]        = useState(item?.serie || '')
   const [localizacao,  setLocalizacao]  = useState(item?.localizacao || '')
+  const [responsavel,  setResponsavel]  = useState(item?.responsavel || '')
+  const [setor,        setSetor]        = useState(item?.setor || '')
   const [faixa,        setFaixa]        = useState(item?.faixa || '')
   const [periodicidade,setPeriodicidade]= useState(item?.periodicidade || '')
   const [criterio,     setCriterio]     = useState(item?.criterio || '')
@@ -54,7 +56,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     try {
       const payload = {
         tag, descricao, tipo, fabricante, modelo, serie,
-        localizacao, faixa, periodicidade, criterio, observacao,
+        localizacao, responsavel, setor, faixa, periodicidade, criterio, observacao,
         ultima_cal:  ultima_cal  || null,
         proxima_cal: proxima_cal || null,
       }
@@ -101,6 +103,17 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
             <div className={s.frow}>
               <label className={s.label}>Modelo</label>
               <input value={modelo} onChange={e => setModelo(e.target.value)} />
+            </div>
+          </div>
+
+          <div className={s.grid2}>
+            <div className={s.frow}>
+              <label className={s.label}>Responsável pela retirada</label>
+              <input value={responsavel} onChange={e => setResponsavel(e.target.value)} placeholder="Nome do responsável" />
+            </div>
+            <div className={s.frow}>
+              <label className={s.label}>Setor</label>
+              <input value={setor} onChange={e => setSetor(e.target.value)} placeholder="Ex: Manutenção, Qualidade..." />
             </div>
           </div>
 
