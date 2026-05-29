@@ -5,7 +5,7 @@ export function Badge({ status }) {
     'Calibrado':       s.ok,
     'A vencer':        s.warn,
     'Vencido':         s.danger,
-    'Sem calibração':  s.gray,
+    'Inativo':  s.gray,
     'Inativo':         s.gray,
   }[status] || s.gray
   return <span className={`${s.badge} ${cls}`}>{status}</span>
@@ -65,3 +65,4 @@ export function Empty({ icon = 'ti-inbox', text = 'Nenhum resultado' }) {
     </div>
   )
 }
+
