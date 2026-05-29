@@ -46,10 +46,7 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
           <h1 className={s.pageTitle}>Inventário</h1>
           <p className={s.pageSub}>{filtered.length} de {instruments.length} instrumentos</p>
         </div>
-        <div style={{display:'flex',gap:8}}>
-          <BtnGhost onClick={() => exportCSV(filtered)}><i className="ti ti-download" /> CSV</BtnGhost>
-          <BtnPrimary onClick={onNew}><i className="ti ti-plus" /> Novo</BtnPrimary>
-        </div>
+        <BtnGhost onClick={() => exportCSV(filtered)}><i className="ti ti-download" /> CSV</BtnGhost>
       </div>
 
       <Card>
