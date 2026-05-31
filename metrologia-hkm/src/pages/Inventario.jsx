@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Card, Badge, BtnGhost, BtnPrimary, Spinner, Empty } from '../components/UI.jsx'
 import s from './Pages.module.css'
 
-const STATUS = ['','Calibrado','A vencer','Vencido','Inativo']
+const STATUS = ['','Calibrado','A vencer','Vencido','Calibrando','Inativo']
 const TIPOS  = ['','Dimensional','Temperatura','Pressão/Força','Elétrico/Outro','Calibrador de Rosca','Inspeção de Solda','Dureza','Outro']
 const PER_PAGE = 50
 
@@ -122,5 +122,6 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
     </div>
   )
 }
+
 
 
