@@ -1,4 +1,5 @@
 import { KPICard, Card, CardHeader, AlertStrip, Badge, Spinner, Empty } from '../components/UI.jsx'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import s from './Pages.module.css'
 
 function daysDiff(proxStr) {
@@ -13,13 +14,22 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('pt-BR')
 }
 
+const STATUS_COLORS = {
+  'Calibrado':  '#22c55e',
+  'A vencer':   '#f97316',
+  'Vencido':    '#ef4444',
+  'Calibrando': '#3b82f6',
+  'Inativo':    '#9ca3af',
+}
+
 export default function Dashboard({ instruments, stats, loading, onNew }) {
   if (loading) return <Spinner />
 
-  const vencidos  = instruments.filter(i => i.status === 'Vencido')
-  const avencer   = instruments.filter(i => i.status === 'A vencer')
-  const calibrados = instruments.filter(i => i.status === 'Calibrado')
-  const semcal    = instruments.filter(i => i.status === 'Inativo')
+  const vencidos    = instruments.filter(i => i.status === 'Vencido')
+  const avencer     = instruments.filter(i => i.status === 'A vencer')
+  const calibrados  = instruments.filter(i => i.status === 'Calibrado')
+  const calibrando  = instruments.filter(i => i.status === 'Calibrando')
+  const inativos    = instruments.filter(i => i.status === 'Inativo')
 
   const urgentes = [...vencidos, ...avencer]
     .sort((a,b) => new Date(a.proxima_cal) - new Date(b.proxima_cal))
@@ -30,13 +40,43 @@ export default function Dashboard({ instruments, stats, loading, onNew }) {
     .sort((a,b) => new Date(a.proxima_cal) - new Date(b.proxima_cal))
     .slice(0,6)
 
-  const byStatus = {
-    'Calibrado': calibrados.length,
-    'A vencer':  avencer.length,
-    'Vencido':   vencidos.length,
-    'Inativo': semcal.length,
-  }
-  const cols = { 'Calibrado':'var(--green)', 'A vencer':'var(--orange)', 'Vencido':'var(--red)', 'Inativo':'var(--gray)' }
+  // Gráfico pizza — status
+  const pieData = [
+    { name: 'Calibrado',  value: calibrados.length  },
+    { name: 'A vencer',   value: avencer.length      },
+    { name: 'Vencido',    value: vencidos.length     },
+    { name: 'Calibrando', value: calibrando.length   },
+    { name: 'Inativo',    value: inativos.length     },
+  ].filter(d => d.value > 0)
+
+  // Gráfico barras — vencimentos próximos 6 meses
+  const hoje = new Date()
+  const meses = Array.from({length:6}, (_,i) => {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth()+i, 1)
+    return {
+      mes: d.toLocaleDateString('pt-BR',{month:'short', year:'2-digit'}),
+      ano: d.getFullYear(),
+      mes_num: d.getMonth(),
+      count: 0
+    }
+  })
+  instruments.forEach(i => {
+    if (!i.proxima_cal) return
+    const d = new Date(i.proxima_cal)
+    const idx = meses.findIndex(m => m.ano === d.getFullYear() && m.mes_num === d.getMonth())
+    if (idx >= 0) meses[idx].count++
+  })
+
+  // Gráfico barras — por setor
+  const setorMap = {}
+  instruments.forEach(i => {
+    const s = i.setor || 'Não informado'
+    setorMap[s] = (setorMap[s] || 0) + 1
+  })
+  const setorData = Object.entries(setorMap)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,8)
+    .map(([name,value]) => ({name, value}))
 
   return (
     <div>
@@ -56,30 +96,61 @@ export default function Dashboard({ instruments, stats, loading, onNew }) {
         <KPICard icon="ti-circle-check"    value={calibrados.length}  label="Calibrados"            color="var(--green)"  />
         <KPICard icon="ti-clock"           value={avencer.length}     label="A vencer (30d)"        color="var(--orange)" />
         <KPICard icon="ti-alert-triangle"  value={vencidos.length}    label="Calibração vencida"    color="var(--red)"    />
-        <KPICard icon="ti-minus-vertical"  value={semcal.length}      label="Inativo"        color="var(--gray)"   />
+        <KPICard icon="ti-refresh"         value={calibrando.length}  label="Calibrando"            color="var(--blue)"   />
+        <KPICard icon="ti-minus-vertical"  value={inativos.length}    label="Inativo"               color="var(--gray)"   />
       </div>
 
       <div className={s.twoCols}>
+        {/* Gráfico Pizza — Status */}
         <Card>
-          <CardHeader title="Status do parque" />
-          <div style={{padding:'14px 16px'}}>
-            {Object.entries(byStatus).map(([k,v]) => {
-              const pct = instruments.length ? Math.round(v/instruments.length*100) : 0
-              return (
-                <div key={k} style={{marginBottom:10}}>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:11,marginBottom:3}}>
-                    <span>{k}</span>
-                    <span style={{color:'var(--text2)'}}>{v} ({pct}%)</span>
-                  </div>
-                  <div style={{height:5,borderRadius:99,background:'var(--bg2)',overflow:'hidden'}}>
-                    <div style={{height:'100%',borderRadius:99,width:`${pct}%`,background:cols[k],transition:'width .4s'}} />
-                  </div>
-                </div>
-              )
-            })}
+          <CardHeader title="Distribuição por status" />
+          <div style={{padding:'8px 0'}}>
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={3} dataKey="value">
+                  {pieData.map((entry,i) => (
+                    <Cell key={i} fill={STATUS_COLORS[entry.name] || '#9ca3af'} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(v,n) => [v, n]} />
+                <Legend iconType="circle" iconSize={8} />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </Card>
 
+        {/* Gráfico Barras — Vencimentos por mês */}
+        <Card>
+          <CardHeader title="Calibrações nos próximos 6 meses" />
+          <div style={{padding:'8px 0'}}>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={meses} margin={{top:5,right:10,left:-20,bottom:5}}>
+                <XAxis dataKey="mes" tick={{fontSize:11}} />
+                <YAxis tick={{fontSize:11}} />
+                <Tooltip />
+                <Bar dataKey="count" name="Instrumentos" fill="var(--blue)" radius={[4,4,0,0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
+      </div>
+
+      {/* Gráfico Barras — Por setor */}
+      <Card>
+        <CardHeader title="Instrumentos por setor" />
+        <div style={{padding:'8px 0'}}>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={setorData} layout="vertical" margin={{top:5,right:20,left:80,bottom:5}}>
+              <XAxis type="number" tick={{fontSize:11}} />
+              <YAxis type="category" dataKey="name" tick={{fontSize:11}} width={80} />
+              <Tooltip />
+              <Bar dataKey="value" name="Instrumentos" fill="var(--blue)" radius={[0,4,4,0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </Card>
+
+      <div className={s.twoCols}>
         <Card>
           <CardHeader title="Próximas calibrações" />
           {proximas.length === 0 ? <Empty text="Sem calibrações agendadas" /> :
@@ -99,36 +170,32 @@ export default function Dashboard({ instruments, stats, loading, onNew }) {
             })
           }
         </Card>
-      </div>
 
-      <Card>
-        <CardHeader title="Instrumentos com atenção" />
-        {urgentes.length === 0
-          ? <Empty icon="ti-circle-check" text="Todos os instrumentos estão em dia" />
-          : <table className={s.tbl}>
-              <thead>
-                <tr>
-                  <th>Tag</th><th>Descrição</th><th>Tipo</th>
-                  <th>Próx. calibração</th><th>Critério IT-CQ-008</th><th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {urgentes.map(i => (
-                  <tr key={i.id}>
-                    <td className={s.mono}>{i.tag}</td>
-                    <td>{i.descricao}</td>
-                    <td className={s.muted}>{i.tipo}</td>
-                    <td className={s.mono}>{fmtDate(i.proxima_cal)}</td>
-                    <td style={{color:'var(--blue)',fontSize:11}}>{i.criterio||'—'}</td>
-                    <td><Badge status={i.status} /></td>
+        <Card>
+          <CardHeader title="Instrumentos com atenção" />
+          {urgentes.length === 0
+            ? <Empty icon="ti-circle-check" text="Todos os instrumentos estão em dia" />
+            : <table className={s.tbl}>
+                <thead>
+                  <tr>
+                    <th>Tag</th><th>Descrição</th>
+                    <th>Próx. calibração</th><th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-        }
-      </Card>
+                </thead>
+                <tbody>
+                  {urgentes.slice(0,8).map(i => (
+                    <tr key={i.id}>
+                      <td className={s.mono}>{i.tag}</td>
+                      <td>{i.descricao}</td>
+                      <td className={s.mono}>{fmtDate(i.proxima_cal)}</td>
+                      <td><Badge status={i.status} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+          }
+        </Card>
+      </div>
     </div>
   )
 }
-
-
