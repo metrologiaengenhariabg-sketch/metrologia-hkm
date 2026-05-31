@@ -8,6 +8,7 @@
 .warn    { background: var(--orange-bg); color: var(--orange); }
 .danger  { background: var(--red-bg);    color: var(--red);    }
 .gray    { background: var(--gray-bg);   color: var(--gray);   }
+.blue    { background: var(--blue-bg);   color: var(--blue);   }
 
 .card {
   background: var(--surface);
@@ -79,3 +80,4 @@
   color: var(--text3); font-size: 12px;
 }
 .empty i { font-size: 26px; }
+
