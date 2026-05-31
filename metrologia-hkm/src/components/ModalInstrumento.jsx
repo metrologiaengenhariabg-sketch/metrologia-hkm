@@ -39,6 +39,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
   const [localizacao,  setLocalizacao]  = useState(item?.localizacao || '')
   const [responsavel,  setResponsavel]  = useState(item?.responsavel || '')
   const [setor,        setSetor]        = useState(item?.setor || '')
+  const [data_retirada,setDataRetirada] = useState(item?.data_retirada?.slice(0,10) || '')
   const [faixa,        setFaixa]        = useState(item?.faixa || '')
   const [periodicidade,setPeriodicidade]= useState(item?.periodicidade || '')
   const [criterio,     setCriterio]     = useState(item?.criterio || '')
@@ -57,7 +58,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     try {
       const payload = {
         tag, descricao, tipo, fabricante, modelo, serie,
-        localizacao, responsavel, setor, calibrado_por, faixa, periodicidade, criterio, observacao,
+        localizacao, responsavel, setor, data_retirada: data_retirada || null, calibrado_por, faixa, periodicidade, criterio, observacao,
         ultima_cal:  ultima_cal  || null,
         proxima_cal: proxima_cal || null,
       }
@@ -116,6 +117,11 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
               <label className={s.label}>Setor</label>
               <input value={setor} onChange={e => setSetor(e.target.value)} placeholder="Ex: Manutenção, Qualidade..." />
             </div>
+          </div>
+
+          <div className={s.frow}>
+            <label className={s.label}>Data de retirada</label>
+            <input type="date" value={data_retirada} onChange={e => setDataRetirada(e.target.value)} style={{width:'100%'}} />
           </div>
 
           <div className={s.grid2}>
@@ -185,4 +191,5 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     </div>
   )
 }
+
 
