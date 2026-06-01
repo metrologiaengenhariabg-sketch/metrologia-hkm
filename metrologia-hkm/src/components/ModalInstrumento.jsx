@@ -61,7 +61,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
       const payload = {
         tag, descricao, tipo, fabricante, modelo, serie,
         localizacao, responsavel, setor, data_retirada: data_retirada || null, calibrado_por, num_certificado, faixa, periodicidade, criterio, observacao,
-        ...(status ? { status } : {}),
+        status: status || 'recalcular',
         ultima_cal:  ultima_cal  || null,
         proxima_cal: proxima_cal || null,
       }
@@ -208,5 +208,6 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     </div>
   )
 }
+
 
 
