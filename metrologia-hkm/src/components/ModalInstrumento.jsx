@@ -48,7 +48,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
   const [ultima_cal,   setUltimaCal]    = useState(item?.ultima_cal?.slice(0,10) || '')
   const [proxima_cal,  setProximaCal]   = useState(item?.proxima_cal?.slice(0,10) || '')
   const [observacao,   setObservacao]   = useState(item?.observacao || '')
-  const [status,       setStatus]       = useState(item?.status || '')
+  const [status,       setStatus]       = useState(['Calibrando','Inativo'].includes(item?.status) ? item.status : '')
   const [saving,       setSaving]       = useState(false)
   const [err,          setErr]          = useState('')
 
