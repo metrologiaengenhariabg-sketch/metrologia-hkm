@@ -28,7 +28,7 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return instruments.filter(i =>
-      (!q || [i.tag, i.descricao, i.fabricante, i.modelo, i.localizacao].join(' ').toLowerCase().includes(q)) &&
+      (!q || [i.tag, i.descricao, i.fabricante, i.modelo, i.localizacao, i.num_certificado].join(' ').toLowerCase().includes(q)) &&
       (!fStatus || i.status === fStatus) &&
       (!fTipo   || i.tipo   === fTipo)
     )
