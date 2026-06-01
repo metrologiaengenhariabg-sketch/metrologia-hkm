@@ -77,25 +77,14 @@ function ModalSolicitacao({ instrumentos, onClose, onSent }) {
         <p style="color:#6b7280;font-size:12px">Enviado via MetroControl · BG Metrologia & Engenharia</p>
       `
 
-      const res = await fetch('https://api.resend.com/emails', {
+      const res = await fetch('https://puuuzrzescwgmzxnoqhk.supabase.co/functions/v1/send-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer re_YNyr47qk_cagfBvTzYGviacqCBKCjoyRb'
-        },
-        body: JSON.stringify({
-          from: 'MetroControl <onboarding@resend.dev>',
-          to: ['comercial01@bgmetrologia.com.br'],
-          reply_to: email,
-          subject: `Solicitação de Calibração — ${nome} — ${instrumentos.length} instrumento(s)`,
-          html
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, email, obs, instrumentos })
       })
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || 'Erro ao enviar e-mail')
-      }
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || 'Erro ao enviar e-mail')
 
       onSent()
     } catch(e) {
