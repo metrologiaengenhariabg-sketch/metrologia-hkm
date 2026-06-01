@@ -36,6 +36,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
   const [fabricante,   setFabricante]   = useState(item?.fabricante || '')
   const [modelo,       setModelo]       = useState(item?.modelo || '')
   const [serie,        setSerie]        = useState(item?.serie || '')
+  const [num_certificado, setNumCertificado] = useState(item?.num_certificado || '')
   const [localizacao,  setLocalizacao]  = useState(item?.localizacao || '')
   const [responsavel,  setResponsavel]  = useState(item?.responsavel || '')
   const [setor,        setSetor]        = useState(item?.setor || '')
@@ -58,7 +59,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     try {
       const payload = {
         tag, descricao, tipo, fabricante, modelo, serie,
-        localizacao, responsavel, setor, data_retirada: data_retirada || null, calibrado_por, faixa, periodicidade, criterio, observacao,
+        localizacao, responsavel, setor, data_retirada: data_retirada || null, calibrado_por, num_certificado, faixa, periodicidade, criterio, observacao,
         ultima_cal:  ultima_cal  || null,
         proxima_cal: proxima_cal || null,
       }
@@ -130,9 +131,14 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
               <input value={serie} onChange={e => setSerie(e.target.value)} />
             </div>
             <div className={s.frow}>
-              <label className={s.label}>Localização</label>
-              <input value={localizacao} onChange={e => setLocalizacao(e.target.value)} />
+              <label className={s.label}>Nº Certificado</label>
+              <input value={num_certificado} onChange={e => setNumCertificado(e.target.value)} placeholder="Ex: CAL-2024-001" />
             </div>
+          </div>
+
+          <div className={s.frow}>
+            <label className={s.label}>Localização</label>
+            <input value={localizacao} onChange={e => setLocalizacao(e.target.value)} style={{width:'100%'}} />
           </div>
 
           <div className={s.grid2}>
@@ -191,5 +197,6 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     </div>
   )
 }
+
 
 
