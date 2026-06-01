@@ -55,7 +55,7 @@ export default function Relatorio({ instruments, loading }) {
 
       {/* Taxa de conformidade */}
       <Card>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 0'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 4px'}}>
           <div>
             <p style={{fontSize:13,fontWeight:600,marginBottom:4}}>Taxa de conformidade</p>
             <p style={{fontSize:11,color:'var(--text2)'}}>Instrumentos calibrados em dia / total ativo</p>
