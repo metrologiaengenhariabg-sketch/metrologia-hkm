@@ -1,213 +1,330 @@
-// ── Calibrações ──────────────────────────────────────────────
-import { Card, CardHeader, Badge, AlertStrip, Spinner, Empty } from '../components/UI.jsx'
+import { useState, useMemo } from 'react'
+import { Card, Badge, BtnPrimary, BtnGhost, Spinner, Empty } from '../components/UI.jsx'
+import { supabase } from '../lib/supabase'
 import s from './Pages.module.css'
 
 function fmtDate(d) { return d ? new Date(d).toLocaleDateString('pt-BR') : '—' }
-function daysDiff(d) { if(!d) return null; const t=new Date();t.setHours(0,0,0,0); return Math.round((new Date(d)-t)/86400000) }
+function daysDiff(d) {
+  if (!d) return null
+  const diff = Math.round((new Date(d) - new Date()) / 86400000)
+  return diff
+}
 
-export function Calibracoes({ instruments, loading }) {
-  if (loading) return <Spinner />
-  const vencidos = [...instruments].filter(i=>i.status==='Vencido').sort((a,b)=>new Date(a.proxima_cal)-new Date(b.proxima_cal))
-  const avencer  = [...instruments].filter(i=>i.status==='A vencer').sort((a,b)=>new Date(a.proxima_cal)-new Date(b.proxima_cal))
-  const sorted   = [...instruments].filter(i=>i.proxima_cal).sort((a,b)=>new Date(a.proxima_cal)-new Date(b.proxima_cal))
+function InstrRow({ i, selected, onToggle, onEdit }) {
+  const days = daysDiff(i.proxima_cal)
+  const daysLabel = days === null ? '—' : days < 0 ? `${Math.abs(days)}d vencido` : `${days}d restantes`
+  const daysColor = days === null ? 'var(--text3)' : days < 0 ? 'var(--red)' : days <= 30 ? 'var(--orange)' : 'var(--green)'
 
-  const CalItem = ({i}) => (
-    <div className={s.calItem}>
-      <p className={s.calDate}>{fmtDate(i.proxima_cal)}</p>
-      <div style={{flex:1,minWidth:0}}>
-        <p className={s.calName}>{i.descricao}</p>
-        <p className={s.calTag}>{i.tag} · {i.criterio||'—'}</p>
+  return (
+    <tr style={{background: selected ? 'var(--blue-bg)' : ''}}>
+      <td style={{textAlign:'center',width:36}}>
+        <input type="checkbox" checked={selected} onChange={() => onToggle(i)} />
+      </td>
+      <td style={{fontFamily:'monospace',fontSize:11,fontWeight:600}}>{i.tag}</td>
+      <td style={{fontSize:12}}>{i.descricao}</td>
+      <td style={{fontSize:11,color:'var(--text2)'}}>{i.tipo||'—'}</td>
+      <td style={{fontSize:11,color:'var(--text2)'}}>{i.responsavel||'—'}</td>
+      <td style={{fontSize:11,color:'var(--text2)'}}>{i.setor||'—'}</td>
+      <td style={{fontFamily:'monospace',fontSize:11}}>{fmtDate(i.proxima_cal)}</td>
+      <td style={{fontSize:11,fontWeight:500,color:daysColor}}>{daysLabel}</td>
+      <td><Badge status={i.status} /></td>
+      <td style={{textAlign:'center'}}>
+        <button onClick={() => onEdit(i)} style={{background:'var(--blue-bg)',color:'var(--blue)',border:'none',borderRadius:4,padding:'3px 7px',cursor:'pointer',fontSize:11}}>✏️</button>
+      </td>
+    </tr>
+  )
+}
+
+function ModalSolicitacao({ instrumentos, onClose, onSent }) {
+  const [nome,    setNome]    = useState('')
+  const [email,   setEmail]   = useState('')
+  const [obs,     setObs]     = useState('')
+  const [sending, setSending] = useState(false)
+  const [err,     setErr]     = useState('')
+
+  const handleSend = async () => {
+    if (!nome.trim() || !email.trim()) { setErr('Informe seu nome e e-mail.'); return }
+    setSending(true); setErr('')
+    try {
+      const lista = instrumentos.map(i =>
+        `• ${i.tag} — ${i.descricao} (${i.tipo||'—'}) — Venc: ${fmtDate(i.proxima_cal)}`
+      ).join('\n')
+
+      const html = `
+        <h2>Solicitação de Calibração — MetroControl</h2>
+        <p><strong>Cliente:</strong> ${nome}</p>
+        <p><strong>E-mail:</strong> ${email}</p>
+        ${obs ? `<p><strong>Observação:</strong> ${obs}</p>` : ''}
+        <hr/>
+        <h3>${instrumentos.length} instrumento(s) para calibrar:</h3>
+        <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%">
+          <thead style="background:#f3f4f6">
+            <tr><th>Tag</th><th>Descrição</th><th>Tipo</th><th>Próx. Calibração</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            ${instrumentos.map(i => `
+              <tr>
+                <td><strong>${i.tag}</strong></td>
+                <td>${i.descricao}</td>
+                <td>${i.tipo||'—'}</td>
+                <td>${fmtDate(i.proxima_cal)}</td>
+                <td>${i.status}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <br/>
+        <p style="color:#6b7280;font-size:12px">Enviado via MetroControl · BG Metrologia & Engenharia</p>
+      `
+
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer re_YNyr47qk_cagfBvTzYGviacqCBKCjoyRb'
+        },
+        body: JSON.stringify({
+          from: 'MetroControl <onboarding@resend.dev>',
+          to: ['comercial01@bgmetrologia.com.br'],
+          reply_to: email,
+          subject: `Solicitação de Calibração — ${nome} — ${instrumentos.length} instrumento(s)`,
+          html
+        })
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.message || 'Erro ao enviar e-mail')
+      }
+
+      onSent()
+    } catch(e) {
+      setErr(e.message)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.4)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:100,padding:20}}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div style={{background:'var(--surface)',borderRadius:'var(--radius-lg)',border:'0.5px solid var(--border2)',padding:24,width:480,maxWidth:'100%',maxHeight:'90vh',overflowY:'auto',boxShadow:'0 16px 40px rgba(0,0,0,.15)'}}>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+          <span style={{fontSize:14,fontWeight:600}}>Solicitar calibração — {instrumentos.length} instrumento(s)</span>
+          <button onClick={onClose} style={{background:'none',border:'none',cursor:'pointer',fontSize:18,color:'var(--text2)'}}>✕</button>
+        </div>
+
+        <p style={{fontSize:12,color:'var(--text2)',marginBottom:16}}>
+          Preencha seus dados e enviaremos a solicitação para o comercial da BG Metrologia.
+        </p>
+
+        <div style={{marginBottom:10}}>
+          <label style={{display:'block',fontSize:11,fontWeight:500,color:'var(--text2)',marginBottom:4}}>Seu nome / empresa *</label>
+          <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: João Silva — HKM" style={{width:'100%'}} />
+        </div>
+
+        <div style={{marginBottom:10}}>
+          <label style={{display:'block',fontSize:11,fontWeight:500,color:'var(--text2)',marginBottom:4}}>Seu e-mail de contato *</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@empresa.com.br" style={{width:'100%'}} />
+        </div>
+
+        <div style={{marginBottom:16}}>
+          <label style={{display:'block',fontSize:11,fontWeight:500,color:'var(--text2)',marginBottom:4}}>Observação (opcional)</label>
+          <textarea rows={3} value={obs} onChange={e => setObs(e.target.value)} placeholder="Ex: Urgente, prazo até 30/06..." style={{width:'100%',resize:'none'}} />
+        </div>
+
+        <div style={{background:'var(--bg)',borderRadius:'var(--radius)',padding:'10px 12px',marginBottom:16,maxHeight:120,overflowY:'auto'}}>
+          <p style={{fontSize:11,fontWeight:500,marginBottom:6}}>Instrumentos selecionados:</p>
+          {instrumentos.map(i => (
+            <p key={i.id} style={{fontSize:11,color:'var(--text2)',margin:'2px 0'}}>• <strong>{i.tag}</strong> — {i.descricao}</p>
+          ))}
+        </div>
+
+        {err && <p style={{color:'var(--red)',fontSize:11,background:'var(--red-bg)',padding:'6px 8px',borderRadius:'var(--radius-sm)',marginBottom:12}}>{err}</p>}
+
+        <div style={{display:'flex',gap:8,justifyContent:'flex-end'}}>
+          <BtnGhost onClick={onClose}>Cancelar</BtnGhost>
+          <BtnPrimary onClick={handleSend} disabled={sending}>
+            {sending ? 'Enviando…' : '📧 Enviar solicitação'}
+          </BtnPrimary>
+        </div>
       </div>
     </div>
   )
+}
+
+const TABS = ['Vencidos', 'A vencer', 'Calibrando']
+
+export default function Calibracoes({ instruments, loading, onEdit }) {
+  const [tab,      setTab]      = useState('Vencidos')
+  const [search,   setSearch]   = useState('')
+  const [fTipo,    setFTipo]    = useState('')
+  const [fSetor,   setSetor]    = useState('')
+  const [selected, setSelected] = useState([])
+  const [modal,    setModal]    = useState(false)
+  const [success,  setSuccess]  = useState(false)
+
+  if (loading) return <Spinner />
+
+  const vencidos   = instruments.filter(i => i.status === 'Vencido')
+  const avencer    = instruments.filter(i => i.status === 'A vencer')
+  const calibrando = instruments.filter(i => i.status === 'Calibrando')
+
+  const baseList = tab === 'Vencidos' ? vencidos : tab === 'A vencer' ? avencer : calibrando
+
+  const tipos  = [...new Set(instruments.map(i => i.tipo).filter(Boolean))].sort()
+  const setores = [...new Set(instruments.map(i => i.setor).filter(Boolean))].sort()
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    return baseList.filter(i =>
+      (!q || [i.tag, i.descricao, i.fabricante].join(' ').toLowerCase().includes(q)) &&
+      (!fTipo  || i.tipo  === fTipo) &&
+      (!fSetor || i.setor === fSetor)
+    )
+  }, [baseList, search, fTipo, fSetor])
+
+  const toggleSelect = (i) => {
+    setSelected(prev =>
+      prev.find(s => s.id === i.id) ? prev.filter(s => s.id !== i.id) : [...prev, i]
+    )
+  }
+
+  const toggleAll = () => {
+    if (selected.length === filtered.length) setSelected([])
+    else setSelected(filtered)
+  }
+
+  const handleSent = () => {
+    setModal(false)
+    setSelected([])
+    setSuccess(true)
+    setTimeout(() => setSuccess(false), 5000)
+  }
+
+  const exportCSV = () => {
+    const list = selected.length > 0 ? selected : filtered
+    const cols = ['tag','descricao','tipo','responsavel','setor','proxima_cal','status']
+    const head = ['Tag','Descrição','Tipo','Responsável','Setor','Próx. Calibração','Status']
+    const rows = [head, ...list.map(i => cols.map(c => i[c] || ''))]
+    const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')
+    const a    = document.createElement('a')
+    a.href     = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv)
+    a.download = `calibracoes_${tab.toLowerCase()}.csv`
+    a.click()
+  }
 
   return (
     <div>
       <div className={s.pageHeader}>
-        <div><h1 className={s.pageTitle}>Calibrações</h1><p className={s.pageSub}>Controle por vencimento · IT-CQ-008</p></div>
-      </div>
-      {vencidos.length>0 && <AlertStrip type="danger"><strong>{vencidos.length}</strong> com calibração vencida.</AlertStrip>}
-      {avencer.length>0  && <AlertStrip type="warn"><strong>{avencer.length}</strong> a vencer nos próximos 30 dias.</AlertStrip>}
-      <div className={s.twoCols}>
-        <Card>
-          <CardHeader title={<><i className="ti ti-alert-triangle" style={{color:'var(--red)',marginRight:5}} />Vencidas ({vencidos.length})</>} />
-          {vencidos.length===0 ? <Empty icon="ti-circle-check" text="Nenhuma vencida" /> : vencidos.slice(0,30).map(i=><CalItem key={i.id} i={i}/>)}
-        </Card>
-        <Card>
-          <CardHeader title={<><i className="ti ti-clock" style={{color:'var(--orange)',marginRight:5}} />A vencer — 30 dias ({avencer.length})</>} />
-          {avencer.length===0 ? <Empty icon="ti-circle-check" text="Nenhuma a vencer" /> : avencer.map(i=><CalItem key={i.id} i={i}/>)}
-        </Card>
-      </div>
-      <Card>
-        <CardHeader title="Todos os instrumentos por vencimento" />
-        <div style={{overflowX:'auto'}}>
-          <table className={s.tbl} style={{tableLayout:'fixed',width:'100%'}}>
-            <colgroup><col style={{width:82}}/><col style={{width:'*'}}/><col style={{width:90}}/><col style={{width:90}}/><col style={{width:90}}/><col style={{width:80}}/><col style={{width:60}}/><col style={{width:85}}/></colgroup>
-            <thead><tr><th>Tag</th><th>Descrição</th><th>Tipo</th><th>Últ. calib.</th><th>Próx. calib.</th><th>Período</th><th>Dias</th><th>Status</th></tr></thead>
-            <tbody>
-              {sorted.slice(0,150).map(i=>{
-                const d=daysDiff(i.proxima_cal)
-                const dc=d===null?'':d<0?'color:var(--red)':d<=30?'color:var(--orange)':'color:var(--text2)'
-                return <tr key={i.id}>
-                  <td className={s.mono} style={{fontWeight:500}}>{i.tag}</td>
-                  <td title={i.descricao}>{i.descricao}</td>
-                  <td className={s.muted}>{i.tipo}</td>
-                  <td className={s.mono}>{fmtDate(i.ultima_cal)}</td>
-                  <td className={s.mono}>{fmtDate(i.proxima_cal)}</td>
-                  <td className={s.muted}>{i.periodicidade||'—'}</td>
-                  <td className={s.mono} style={{cssText:dc}}>{d!==null?(d>=0?'+'+d+'d':d+'d'):'—'}</td>
-                  <td><Badge status={i.status}/></td>
-                </tr>
-              })}
-            </tbody>
-          </table>
+        <div>
+          <h1 className={s.pageTitle}>Calibrações</h1>
+          <p className={s.pageSub}>Gestão de calibrações por status</p>
         </div>
-      </Card>
-    </div>
-  )
-}
-
-// ── Relatório ─────────────────────────────────────────────────
-export function Relatorio({ instruments, stats, loading }) {
-  if (loading) return <Spinner />
-  const byTipo   = {}
-  const byStatus = {}
-  instruments.forEach(i => {
-    byTipo[i.tipo]     = (byTipo[i.tipo]||0)+1
-    byStatus[i.status] = (byStatus[i.status]||0)+1
-  })
-  const conf = instruments.length ? Math.round((byStatus['Calibrado']||0)/instruments.length*100) : 0
-
-  return (
-    <div>
-      <div className={s.pageHeader}><div><h1 className={s.pageTitle}>Visão geral</h1><p className={s.pageSub}>Indicadores consolidados · HKM</p></div></div>
-      <div className={s.kpis} style={{gridTemplateColumns:'repeat(3,1fr)'}}>
-        {[['Taxa de conformidade',`${conf}%`,'var(--green)'],['Pendências críticas',byStatus['Vencido']||0,'var(--red)'],['Atenção preventiva',byStatus['A vencer']||0,'var(--orange)']].map(([l,v,c])=>(
-          <div key={l} style={{background:'var(--surface)',border:'0.5px solid var(--border)',borderRadius:'var(--radius-lg)',padding:'16px'}}>
-            <p style={{fontSize:22,fontWeight:600,color:c,lineHeight:1}}>{v}</p>
-            <p style={{fontSize:11,color:'var(--text2)',marginTop:4}}>{l}</p>
-          </div>
-        ))}
+        <div style={{display:'flex',gap:8}}>
+          {selected.length > 0 && (
+            <BtnPrimary onClick={() => setModal(true)}>
+              📧 Solicitar calibração ({selected.length})
+            </BtnPrimary>
+          )}
+          <BtnGhost onClick={exportCSV}>
+            <i className="ti ti-download" /> CSV {selected.length > 0 ? `(${selected.length})` : ''}
+          </BtnGhost>
+        </div>
       </div>
-      <div className={s.twoCols}>
-        <Card>
-          <CardHeader title="Por tipo de instrumento" />
-          <div style={{padding:'12px 16px'}}>
-            {Object.entries(byTipo).sort((a,b)=>b[1]-a[1]).map(([k,v])=>(
-              <div key={k} style={{display:'flex',justifyContent:'space-between',fontSize:12,padding:'5px 0',borderBottom:'0.5px solid var(--border)'}}>
-                <span>{k}</span><span style={{fontWeight:500}}>{v}</span>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <Card>
-          <CardHeader title="Por status" />
-          <div style={{padding:'12px 16px'}}>
-            {Object.entries(byStatus).map(([k,v])=>(
-              <div key={k} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'5px 0',borderBottom:'0.5px solid var(--border)'}}>
-                <span style={{fontSize:12}}>{k}</span><Badge status={k}>{v}</Badge>
-              </div>
-            ))}
-          </div>
-        </Card>
+
+      {success && (
+        <div style={{background:'var(--green-bg)',color:'var(--green)',padding:'10px 16px',borderRadius:'var(--radius)',marginBottom:16,fontSize:13,fontWeight:500}}>
+          ✅ Solicitação enviada com sucesso para o comercial da BG Metrologia!
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div style={{display:'flex',gap:4,marginBottom:16}}>
+        {TABS.map(t => {
+          const count = t === 'Vencidos' ? vencidos.length : t === 'A vencer' ? avencer.length : calibrando.length
+          return (
+            <button key={t} onClick={() => { setTab(t); setSelected([]) }}
+              style={{
+                padding:'6px 14px', borderRadius:'var(--radius)', border:'1px solid var(--border)',
+                background: tab === t ? 'var(--blue)' : 'var(--surface)',
+                color: tab === t ? '#fff' : 'var(--text)',
+                fontSize:12, fontWeight:500, cursor:'pointer', display:'flex', alignItems:'center', gap:6
+              }}>
+              {t}
+              <span style={{
+                background: tab === t ? 'rgba(255,255,255,.25)' : 'var(--bg)',
+                borderRadius:10, padding:'1px 7px', fontSize:11
+              }}>{count}</span>
+            </button>
+          )
+        })}
       </div>
-    </div>
-  )
-}
 
-// ── IT-CQ-008 ─────────────────────────────────────────────────
-const CRITERIOS = [
-  ['Alicate Amperímetro','ALC','Tensão/Corrente DC/AC, Resistência','12 meses','±5% da leitura',null],
-  ['Aparelho de US','INSP','Controle de ganho / Linearidade','12 meses','±2% / 1mm',null],
-  ['Balança','BAL','0–40 Kg / 0–5,01 Kg','12 meses','1% da leitura',null],
-  ['Bloco Padrão','BLP','0,50–100,00mm','12 meses','0,005mm',null],
-  ['Braço Tridimensional','BTR','0–1500mm','24 meses','±0,07mm',null],
-  ['Calibrador Tampão Rosca Métrica','CTRM','—','60 meses','Conforme NBR ISO 1502','NBR ISO 1502'],
-  ['Calibrador Tampão Rosca Unificada','CTRU','—','60 meses','Conforme ANSI/ASME B1.2','ANSI/ASME B1.2'],
-  ['Calibrador Tampão Rosca NPT','CTRN','—','60 meses','Conforme ANSI/ASME B1.20.1','ANSI/ASME B1.20.1'],
-  ['Calibrador Anel de Rosca','CAR','—','60 meses','Conforme NBR ISO 1502 e ANSI/ASME B1.20.1','NBR ISO 1502'],
-  ['Calibrador de Folga','CF','0,05–1,00mm','12 meses','Conforme DIN 2275','DIN 2275'],
-  ['Calibrador de Solda','CS','0 a 25/30/45mm','12 meses','±0,3mm',null],
-  ['Calibre Passa Não Passa','CNP','6,3–20mm','12 meses','±0,2mm',null],
-  ['Célula de Carga','CC','0–600 / 0–300 tf','12 meses','2% da leitura',null],
-  ['Clinômetro Digital','MI','0–90°','12 meses','±0,3°',null],
-  ['Condutivímetro','CNV','0–2000 µS/cm','24 meses','3% da leitura',null],
-  ['Controlador de Temperatura','CT','-50–1200°C','12 meses','3°C',null],
-  ['Cronômetro Digital','CMD','0–50s','12 meses','0,01s',null],
-  ['Detector de Gás','DG','O₂/CO₂/CH₄/H₂O','6 meses','±2,0 / ±2,1',null],
-  ['Durômetro','DUR','Shore D/A','12 meses','2 Shore / 1,3 Shore',null],
-  ['Durômetro Portátil Digital','MTK','70–960 HLD','12 meses','10 HLD',null],
-  ['Escala','ESC','0–1m / 0–2m','12 meses','1,3mm',null],
-  ['Esquadro de Aço','EA','90°','12 meses','1° / retitude 0,2mm',null],
-  ['Esquadro Combinado','EC','90°','12 meses',"0°30' / retitude 0,05mm",null],
-  ['Fluxômetro','BB','3–25 l/min','12 meses','1 l/min',null],
-  ['Goniômetro','GP','0–360°','12 meses',"0°10'",null],
-  ['Holiday Detector','HD','0–90W','24 meses','±0,12W',null],
-  ['Luxímetro','LUX','0–199.999 Lx','6 meses','±15 Lx',null],
-  ['Malha de Pressão','MAP','0–25 bar','12 meses','1,3% do FE',null],
-  ['Manômetro','MAN','Diversas faixas','12 meses','3% do FE',null],
-  ['Teste de Aderência Pull Off','ETA','0–25 MPa','24 meses','1,1 MPa',null],
-  ['Manovacuômetro','MVA','Diversas faixas','12 meses','3% do FE',null],
-  ['Bloco de Massa Padrão','BMP','5,5 Kg','12 meses','±100g',null],
-  ['Medidor de Camada','MC','0–1500µm','12 meses','0,04µm',null],
-  ['Medidor de Camada Úmida','MEE','51–762µm','12 meses','0,04µm',null],
-  ['Medidor de Espessura','SP','0–1000µm','12 meses','0,04µm',null],
-  ['Micrômetro de Rosca','MR','25–50mm','12 meses','0,007mm',null],
-  ['Micrômetro Externo','ME','Diversas faixas','12 meses','0,007 / 0,010mm',null],
-  ['Micrômetro Interno','MIT','Diversas faixas','12 meses','0,007mm',null],
-  ['Multímetro','MUL','Tensão/Corrente DC/AC, Resistência','12 meses','±5% da leitura',null],
-  ['Nível de Bolhas','NB','—','12 meses','0,1mm',null],
-  ['Nível Ótico','NO','0–100m','12 meses','≤1mm/Km',null],
-  ['Paquímetro','PAQ','Diversas faixas','12 meses','0,07mm / 0,3mm',null],
-  ['Paquímetro de Profundidade','PQP','0–150mm','12 meses','0,07mm',null],
-  ['Projetor de Perfil','PROJ','0–180° / 0–50mm','36 meses',"0°10' / 0,020mm",null],
-  ['Registrador Gráfico','REG','-200–1260°C','3 meses','6,7°C',null],
-  ['Relógio Apalpador','RA','0–0,8 / 0–1,5mm','12 meses','0,07mm',null],
-  ['Relógio Comparador','RC','0–0,25" / 0–10mm','12 meses','0,07mm',null],
-  ['Rugosímetro','RUG','0–350µm / 0–12,7mm','12/60 meses','0,13µm / 0,007mm',null],
-  ['Súbito','SUB','Diversas faixas','12 meses','0,007mm',null],
-  ['Transferidor de Grau','TGR','0–180°','12 meses',"0°15'00\"",null],
-  ['Teodolito DGT10','TDL','0–360°','18 meses','0,7°',null],
-  ['Termo-higrômetro','TER','0–50°C / 5–95%UR','12 meses','2°C / 6,7%UR',null],
-  ['Termômetro Infravermelho','TI','-30–550°C','12 meses','5°C',null],
-  ['Termômetro Digital','PIR','0–1300°C','12 meses','2°C',null],
-  ['Termopar','TP','-270–1260°C','3 meses','6,7°C',null],
-  ['Torquímetro','TOQ','200–1000 Nm','12 meses','4% da leitura',null],
-  ['Transferidor de Ângulo','TA','0–180°','12 meses','0,7°',null],
-  ['Trena','TR','0–5M / 0–8M / 0–30M','12 meses','1,3mm',null],
-  ['Tubo Decantador','TD','0–100mL','12 meses','±0,2mL',null],
-  ['YOKE','YO','0–5500g','12 meses','±0,2g',null],
-]
-
-import { useState } from 'react'
-export function ITCQ() {
-  const [q, setQ] = useState('')
-  const list = CRITERIOS.filter(r => !q || r[0].toLowerCase().includes(q.toLowerCase()) || r[1].toLowerCase().includes(q.toLowerCase()))
-  return (
-    <div>
-      <div className={s.pageHeader}><div><h1 className={s.pageTitle}>IT-CQ-008 Rev.03</h1><p className={s.pageSub}>Critérios de aceitação · HKM · 08/02/2024</p></div></div>
       <Card>
         <div className={s.toolbar}>
-          <input placeholder="Buscar equipamento ou tag..." value={q} onChange={e=>setQ(e.target.value)} style={{flex:1}} />
+          <input
+            placeholder="Buscar por tag ou descrição..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            style={{flex:1}}
+          />
+          <select value={fTipo} onChange={e => setFTipo(e.target.value)} style={{width:130}}>
+            <option value="">Todos os tipos</option>
+            {tipos.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <select value={fSetor} onChange={e => setSetor(e.target.value)} style={{width:130}}>
+            <option value="">Todos os setores</option>
+            {setores.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
         </div>
-        <table className={s.tbl}>
-          <thead><tr><th>Equipamento</th><th>Tag</th><th>Faixa de utilização</th><th>Periodicidade</th><th>Critério de aceitação</th><th>Norma</th></tr></thead>
-          <tbody>
-            {list.map(r=>(
-              <tr key={r[1]}>
-                <td>{r[0]}</td>
-                <td className={s.mono} style={{fontWeight:500}}>{r[1]}</td>
-                <td className={s.muted}>{r[2]}</td>
-                <td className={s.muted}>{r[3]}</td>
-                <td style={{color:'var(--blue)',fontWeight:500}}>{r[4]}</td>
-                <td className={s.muted}>{r[5]||'—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+        {filtered.length === 0
+          ? <Empty icon="ti-circle-check" text="Nenhum instrumento encontrado" />
+          : <table className={s.tbl}>
+              <thead>
+                <tr>
+                  <th style={{width:36,textAlign:'center'}}>
+                    <input type="checkbox"
+                      checked={selected.length === filtered.length && filtered.length > 0}
+                      onChange={toggleAll}
+                    />
+                  </th>
+                  <th>Tag</th>
+                  <th>Descrição</th>
+                  <th>Tipo</th>
+                  <th>Responsável</th>
+                  <th>Setor</th>
+                  <th>Próx. calib.</th>
+                  <th>Dias</th>
+                  <th>Status</th>
+                  <th style={{textAlign:'center'}}>Ação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(i => (
+                  <InstrRow
+                    key={i.id}
+                    i={i}
+                    selected={!!selected.find(s => s.id === i.id)}
+                    onToggle={toggleSelect}
+                    onEdit={onEdit}
+                  />
+                ))}
+              </tbody>
+            </table>
+        }
+        <div style={{padding:'8px 0',fontSize:11,color:'var(--text3)'}}>
+          {filtered.length} instrumento(s) · {selected.length} selecionado(s)
+        </div>
       </Card>
+
+      {modal && (
+        <ModalSolicitacao
+          instrumentos={selected}
+          onClose={() => setModal(false)}
+          onSent={handleSent}
+        />
+      )}
     </div>
   )
 }
-
-export default Calibracoes
