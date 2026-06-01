@@ -48,6 +48,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
   const [ultima_cal,   setUltimaCal]    = useState(item?.ultima_cal?.slice(0,10) || '')
   const [proxima_cal,  setProximaCal]   = useState(item?.proxima_cal?.slice(0,10) || '')
   const [observacao,   setObservacao]   = useState(item?.observacao || '')
+  const [status,       setStatus]       = useState(item?.status || '')
   const [saving,       setSaving]       = useState(false)
   const [err,          setErr]          = useState('')
 
@@ -59,7 +60,7 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     try {
       const payload = {
         tag, descricao, tipo, fabricante, modelo, serie,
-        localizacao, responsavel, setor, data_retirada: data_retirada || null, calibrado_por, num_certificado, faixa, periodicidade, criterio, observacao,
+        localizacao, responsavel, setor, data_retirada: data_retirada || null, calibrado_por, num_certificado, faixa, periodicidade, criterio, observacao, status,
         ultima_cal:  ultima_cal  || null,
         proxima_cal: proxima_cal || null,
       }
@@ -184,6 +185,15 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
             <textarea rows={2} value={observacao} onChange={e => setObservacao(e.target.value)} style={{width:'100%', resize:'none'}} />
           </div>
 
+          <div className={s.frow}>
+            <label className={s.label}>Status (deixe em branco para calcular automaticamente)</label>
+            <select value={status} onChange={e => setStatus(e.target.value)} style={{width:'100%'}}>
+              <option value="">Automático (pela data)</option>
+              <option value="Calibrando">🔄 Calibrando</option>
+              <option value="Inativo">⚫ Inativo</option>
+            </select>
+          </div>
+
           {err && <p className={s.err}><i className="ti ti-alert-circle" /> {err}</p>}
         </div>
 
@@ -197,6 +207,5 @@ export default function ModalInstrumento({ item, onClose, onSaved }) {
     </div>
   )
 }
-
 
 
