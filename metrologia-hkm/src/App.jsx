@@ -60,11 +60,13 @@ export default function App() {
   // Recarrega dados quando a aba fica ativa novamente
   useEffect(() => {
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && session) load()
+      if (document.visibilityState === 'visible' && session) {
+        window.location.reload()
+      }
     }
     document.addEventListener('visibilitychange', handleVisibility)
     return () => document.removeEventListener('visibilitychange', handleVisibility)
-  }, [session, load])
+  }, [session])
 
   const openNew  = ()   => { setEditItem(null); setModal(true) }
   const openEdit = item => { setEditItem(item); setModal(true) }
@@ -140,5 +142,6 @@ export default function App() {
     </div>
   )
 }
+
 
 
