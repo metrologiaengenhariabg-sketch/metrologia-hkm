@@ -191,16 +191,18 @@ export default function Calibracoes({ instruments, loading, onEdit }) {
     setTimeout(() => setSuccess(false), 5000)
   }
 
-  const exportCSV = () => {
-    const list = selected.length > 0 ? selected : filtered
-    const cols = ['tag','descricao','tipo','responsavel','setor','proxima_cal','status']
-    const head = ['Tag','Descrição','Tipo','Responsável','Setor','Próx. Calibração','Status']
-    const rows = [head, ...list.map(i => cols.map(c => i[c] || ''))]
-    const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')
-    const a    = document.createElement('a')
-    a.href     = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv)
-    a.download = `calibracoes_${tab.toLowerCase()}.csv`
-    a.click()
+  const exportExcel = () => {
+    import('xlsx').then(XLSX => {
+      const list = selected.length > 0 ? selected : filtered
+      const cols = ['tag','descricao','tipo','responsavel','setor','proxima_cal','status']
+      const head = ['Tag','Descrição','Tipo','Responsável','Setor','Próx. Calibração','Status']
+      const data = [head, ...list.map(i => cols.map(c => i[c] || ''))]
+      const ws = XLSX.utils.aoa_to_sheet(data)
+      ws['!cols'] = [10,30,14,20,16,14,10].map(w => ({wch:w}))
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Calibrações')
+      XLSX.writeFile(wb, `calibracoes_${tab.toLowerCase()}.xlsx`)
+    })
   }
 
   return (
@@ -216,7 +218,7 @@ export default function Calibracoes({ instruments, loading, onEdit }) {
               📧 Solicitar calibração ({selected.length})
             </BtnPrimary>
           )}
-          <BtnGhost onClick={exportCSV}>
+          <BtnGhost onClick={exportExcel}>
             <i className="ti ti-download" /> CSV {selected.length > 0 ? `(${selected.length})` : ''}
           </BtnGhost>
         </div>
