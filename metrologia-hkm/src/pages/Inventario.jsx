@@ -8,15 +8,17 @@ const PER_PAGE = 50
 
 function fmtDate(d) { return d ? new Date(d).toLocaleDateString('pt-BR') : '—' }
 
-function exportCSV(list) {
-  const cols = ['tag','descricao','tipo','fabricante','modelo','localizacao','faixa','periodicidade','criterio','ultima_cal','proxima_cal','status']
-  const head = ['Tag','Descrição','Tipo','Fabricante','Modelo','Localização','Faixa','Periodicidade','Critério','Última Calibração','Próxima Calibração','Status']
-  const rows = [head, ...list.map(i => cols.map(c => i[c] || ''))]
-  const csv  = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n')
-  const a    = document.createElement('a')
-  a.href     = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv)
-  a.download = 'BG_Instrumentos.csv'
-  a.click()
+function exportExcel(list) {
+  import('xlsx').then(XLSX => {
+    const cols = ['tag','descricao','tipo','fabricante','modelo','responsavel','setor','localizacao','faixa','periodicidade','criterio','num_certificado','calibrado_por','ultima_cal','proxima_cal','status','observacao']
+    const head = ['Tag','Descrição','Tipo','Fabricante','Modelo','Responsável','Setor','Localização','Faixa','Periodicidade','Critério','Nº Certificado','Calibrado por','Última Calibração','Próxima Calibração','Status','Observação']
+    const data = [head, ...list.map(i => cols.map(c => i[c] || ''))]
+    const ws = XLSX.utils.aoa_to_sheet(data)
+    ws['!cols'] = [10,30,14,16,14,20,16,16,12,12,12,14,18,14,14,10,20].map(w => ({wch:w}))
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Instrumentos')
+    XLSX.writeFile(wb, 'BG_Instrumentos.xlsx')
+  })
 }
 
 export default function Inventario({ instruments, loading, onEdit, onDelete, onNew }) {
@@ -46,7 +48,7 @@ export default function Inventario({ instruments, loading, onEdit, onDelete, onN
           <h1 className={s.pageTitle}>Inventário</h1>
           <p className={s.pageSub}>{filtered.length} de {instruments.length} instrumentos</p>
         </div>
-        <BtnGhost onClick={() => exportCSV(filtered)}><i className="ti ti-download" /> CSV</BtnGhost>
+        <BtnGhost onClick={() => exportExcel(filtered)}><i className="ti ti-download" /> Excel</BtnGhost>
       </div>
 
       <Card>
